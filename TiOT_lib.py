@@ -71,7 +71,6 @@ def TiOT(x, y, a = None, b = None, detail_mode = False):
     r = np.array([(t[i] - s[j])**2 for i in range(n) for j in range(m)])
     c = np.array(np.concatenate((a,b, [0])))
     bounds = [(None, None) for var in range(m+n)] + [(0,1)]
-    #print(f"Size checking A: {A.shape}, b = {r.shape}, c = {c.shape}")
     res = linprog(c, A_ub=A, b_ub=r, bounds=bounds)
     x_opt = res.x
     u = x_opt[:int(len(x_opt) / 2)]
@@ -192,7 +191,6 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
     #if curIter == maxIter: print(f"Algorithm did not stop after {maxIter} iterations")
     C = w*value_diff + (1-w)*time_diff
     transport_plan = np.diag(g) @ K @ np.diag(h)
-    print(f"optimal w = {w}, optimal value : {np.sum(C * transport_plan)}")
     return np.sum(C * transport_plan), transport_plan, w, 
 
 
