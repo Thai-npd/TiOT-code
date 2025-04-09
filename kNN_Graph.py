@@ -1,24 +1,13 @@
-import numpy as np
-import ot
-import pandas as pd
-from collections import defaultdict
-import seaborn as sns
 import matplotlib.pyplot as plt
-import TiOT_lib
 import os
-from sklearn.neighbors import KNeighborsClassifier
-import multiprocessing
-from sklearn.metrics import accuracy_score
-from tqdm import tqdm
 import csv
 import kNN_TiOT
-from matplotlib.ticker import LogFormatterMathtext
 
 def experiment_kNNgraph(dataset_name, w_TAOT):
     data = kNN_TiOT.process_data(dataset_name= dataset_name)
     #w_list = [0, w_TAOT/4, w_TAOT/2, w_TAOT,w_TAOT*2, w_TAOT*4, 7, 10]
     w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
-    eps_list = [0.01*i for i in range(1,11)]
+    eps_list = [0.01*i for i in range(1,4)]
     alg_names = ["TiOT"] +  [f"TAOT(w = {w})" for w in w_list]
     results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
     for eps in eps_list:
@@ -47,7 +36,7 @@ def experiment_kNNgraph(dataset_name, w_TAOT):
 if __name__ == "__main__":
     #experiment_kNNgraph("CBF", 1)
     #experiment_kNNgraph("DistalPhalanxOutlineAgeGroup", 1)
-    #experiment_kNNgraph("SonyAIBORobotSurface1", 2)
+    experiment_kNNgraph("SonyAIBORobotSurface1", 2)
     #experiment_kNNgraph("ProximalPhalanxTW", 0.7)
     #experiment_kNNgraph("ECG200", 3)
     #experiment_kNNgraph('SwedishLeaf',0.9)
@@ -62,7 +51,7 @@ if __name__ == "__main__":
     #experiment_kNNgraph('MiddlePhalanxOutlineCorrect', 0.5)
     # experiment_kNNgraph('TwoLeadECG', 0.1)
     # experiment_kNNgraph('MedicalImages', 4)
-    experiment_kNNgraph('ArrowHead', 3)
+    # experiment_kNNgraph('ArrowHead', 3)
     # experiment_kNNgraph('ToeSegmentation2', 0.8)
     # experiment_kNNgraph('ToeSegmentation1', 0.1)
     # experiment_kNNgraph('Meat', 0.9)
@@ -72,5 +61,5 @@ if __name__ == "__main__":
     # experiment_kNNgraph('Wine', 9)
     # experiment_kNNgraph('Car', 0.8)
     # experiment_kNNgraph('Beef', 6)
-    experiment_kNNgraph('Symbols', 0.8)
+    # experiment_kNNgraph('Symbols', 0.8)
     # experiment_kNNgraph('Strawberry', 0.2)
