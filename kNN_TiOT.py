@@ -18,6 +18,9 @@ w_global = 10
 def eTiOT(X1, X2):
     return TiOT_lib.eTiOT(X1,X2, eps=eps_global)[0]
 
+def fast_eTiOT(X1, X2):
+    return TiOT_lib.eTiOT(X1,X2, eps=eps_global, w_update_freq=20)[0]
+
 def eTAOT(X1, X2):
     return TiOT_lib.eTAOT(X1,X2, eps = eps_global)[0]
 
@@ -59,6 +62,8 @@ def kNN(dataset_name, data, metric_name , eps , w ):
         metric = 'euclidean'
     elif metric_name == 'eTAOT':
         metric = eTAOT
+    elif metric_name == 'fast_eTiOT':
+        metric = fast_eTiOT
     X_train, Y_train, X_test, Y_test = data[0], data[1], data[2], data[3]
     knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
     knn.fit(X_train, Y_train)
@@ -83,28 +88,48 @@ def experiment_kNN(dataset_name, eps_TAOT, w_TAOT ):
         writer.writerow([dataset_name] + errors)
     print("Complete saving results")
 
-def experiment_kNNgraph(dataset_name, w_TAOT):
-    data = process_data(dataset_name= dataset_name)
-    w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
-    eps_list = [0.01*i for i in range(1,4)]
-    alg_names = ["TiOT"] +  [f"TAOT(w = {w})" for w in w_list]
-    results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
-    for eps in eps_list:
-        results['TiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = w_TAOT))
-        for w in w_list:
-            results[f"TAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
+def experiment_kNNgraph(dataset_name, w_TAOT, read_result = False):
+    eps_list = [0.01*i for i in range(1,11)]
+    eps_name = f" ({eps_list[0]} --> {eps_list[-1]})"       
+    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
+    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
 
-    eps_name = str(eps_list[0]) + "-->" + str(eps_list[-1])         # str(exps[0]) + "-->" + str(exps[-1]) 
-    plot_file = os.path.join("plots", "Comparison on " + dataset_name + " with " + eps_name + ".pdf")
-    result_file = os.path.join("saved_results","Results on " + dataset_name + eps_name + '.csv')
+    if read_result == False:
+        data = process_data(dataset_name= dataset_name)
+        w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
+        alg_names = ["eTiOT", "fast_eTiOT"]  +  [f"eTAOT(w = {w})" for w in w_list]
+        results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
+        for eps in eps_list:
+            results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = w_TAOT))
+            results['fast_eTiOT'].append(kNN(dataset_name, data, metric_name='fast_eTiOT', eps = eps, w = w_TAOT))
+            for w in w_list:
+                results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
+    else:
+        results = {'eps': eps_list}
+        with open(result_file, "r") as f:
+            reader = csv.reader(f)
+            header = next(reader)
+            alg_names = header[1:]
+            for name in alg_names:
+                results[name] = []
+            for row in reader:
+                for i, name in enumerate(alg_names):
+                    results[name].append(float(row[i + 1]))
 
-    plt.figure()
+    sns.set(style="whitegrid", context="paper")
+    plt.figure(figsize=(8, 5))
+    markers = ['o', 's', '^', 'D', 'v', 'P', 'X']
+    i = 0
     for name in alg_names:
-        plt.scatter(eps_list, results[name])
-        plt.plot(eps_list, results[name], label = name)
+        plt.scatter(eps_list, results[name], marker=markers[i])
+        plt.plot(eps_list, results[name], label = name, linewidth=1.75)
+        i+=1
+    plt.xlabel(r"$\varepsilon$", fontsize = 14)
+    plt.ylabel("Error", fontsize = 14)
     plt.legend()
+    plt.tight_layout()
+    plt.savefig(plot_file, dpi=300)  # High-resolution
     plt.show()
-    plt.savefig(plot_file)
 
     with open(result_file, 'w', newline='') as f:
         writer = csv.writer(f)
@@ -115,7 +140,7 @@ def experiment_kNNgraph(dataset_name, w_TAOT):
 if __name__ == "__main__":
     #experiment_kNNgraph("CBF", 1)
     #experiment_kNNgraph("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_kNNgraph("SonyAIBORobotSurface1", 2)
+    experiment_kNNgraph("SonyAIBORobotSurface1", 2, read_result=True)
     #experiment_kNNgraph("ProximalPhalanxTW", 0.7)
     #experiment_kNNgraph("ECG200", 3)
     #experiment_kNNgraph('SwedishLeaf',0.9)
