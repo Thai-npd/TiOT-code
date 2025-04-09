@@ -138,9 +138,9 @@ def experiment_kNNgraph(dataset_name, w_TAOT, read_result = False):
         writer.writerows(rows)  
 
 if __name__ == "__main__":
-    #experiment_kNNgraph("CBF", 1)
+    experiment_kNNgraph("CBF", 1)
     #experiment_kNNgraph("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_kNNgraph("SonyAIBORobotSurface1", 2, read_result=True)
+    #experiment_kNNgraph("SonyAIBORobotSurface1", 2, read_result=True)
     #experiment_kNNgraph("ProximalPhalanxTW", 0.7)
     #experiment_kNNgraph("ECG200", 3)
     #experiment_kNNgraph('SwedishLeaf',0.9)
