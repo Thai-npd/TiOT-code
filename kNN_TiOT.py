@@ -90,7 +90,7 @@ def experiment_kNN(dataset_name, eps_TAOT, w_TAOT ):
 
 def experiment_kNNgraph(dataset_name, w_TAOT, read_result = False):
     eps_list = [0.01*i for i in range(1,11)]
-    eps_name = f" ({eps_list[0]} --> {eps_list[-1]})"       
+    eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
     plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
     result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
 
