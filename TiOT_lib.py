@@ -223,7 +223,7 @@ def TAOT(x, y, a = None, b = None, w = 0.5, costmatrix = costmatrix1):
     M = costmatrix(x, y, w)
     if a == None: a = np.ones(n) / n
     if b == None: b = np.ones(m) / m
-    result = ot.emd2(a,b,M, return_matrix=True)
+    result = ot.lp.emd2(a,b,M, return_matrix=True) # ot.emd2(a,b,M, return_matrix=True)
     distance = result[0]
     transport_plan = result[1]['G']
     return distance, transport_plan
