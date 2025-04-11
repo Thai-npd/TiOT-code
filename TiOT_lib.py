@@ -65,7 +65,7 @@ def costmatrix1(x,y, w) -> np.ndarray :
     
     return M  
 
-def TiOT(x, y, a = None, b = None, detail_mode = False):
+def TiOT(x, y, a = None, b = None, detail_mode = False, verbose = False):
     """
     Solve the Time-integrated Optimal Transport (TiOT) problem between two discrete distributions.
 
@@ -160,7 +160,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
             dfw, df2w = df12(w)
             w = w - dfw / df2w
             if np.abs(dfw) < subprob_tol or w >=1  or w <= 0 :
-                if verbose == True: 
+                if verbose > 1: 
                     print(f"Newton Algorithm converges after {i+1} iterations")
                 if 0 < w < 1: 
                     break
@@ -171,7 +171,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
                     w = 0
                     break
                 
-        if verbose == True:
+        if verbose > 1:
             if i == maxIter: print(f"Newton algorithm does not converge after {i} iterations")
         C = w*value_diff + (1-w)*time_diff
         K = np.exp(-C/eps)
