@@ -51,10 +51,9 @@ def combine_runtimes(X1, X2, metrics, lengths):
             print(f"  ===> Done algorithm {metric.__name__} ")
     return results
 
-def plot_runtime(results):
+def plot_runtime(results, plot_file):
     lengths = results['len']
     metric_names = [k for k in results.keys() if k != 'len']
-    plot_file = os.path.join("runningtime_data", f"Plot runtime_graph (size {lengths[0]} to {lengths[-1]}).pdf")
     sns.set(style="whitegrid", context="paper")
     plt.figure(figsize=(8, 5))
     markers = ['o', 's', '^', 'D', 'v', 'P', 'X']
@@ -69,9 +68,7 @@ def plot_runtime(results):
     plt.savefig(plot_file, dpi=300)  # High-resolution
     plt.show()
 
-def save_result(results, dataset_name):
-    lengths = results['len']
-    result_file = os.path.join("runningtime_data", f"Results runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).csv")
+def save_result(results, result_file):
     with open(result_file, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(results.keys())  # header
@@ -96,14 +93,17 @@ def read_result(result_file):
                     results[name].append(None)
 
 def main():
-    #dataset_name = 'Rock'
-    dataset_name = 'HandOutlines'
-    lengths = [100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
-    metrics = [ eTiOT, fast_eTiOT, eTAOT]
+    dataset_name = 'Rock'
+    #dataset_name = 'HandOutlines'
+    #lengths = [100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
+    lengths = [100, 200, 300, 400, 600, 800, 1000, 1300, 1600, 2000] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
+    metrics = [TiOT, eTiOT, fast_eTiOT, eTAOT]
     result_file = os.path.join("runningtime_data", f"Results runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).csv")
+    plot_file = os.path.join("runningtime_data", f"Plot runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).pdf")
     X1, X2 = process_data(dataset_name, start1=0, start2=10, numpoint=1)
     results = combine_runtimes(X1, X2, metrics, lengths)
-    plot_runtime(results)
-    save_result(results)
+    plot_runtime(results, plot_file)
+    save_result(results, result_file)
     #read_result(result_file)
-    
+
+main()
