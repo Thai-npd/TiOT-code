@@ -94,9 +94,7 @@ def read_result(result_file):
     return results
 
 def main():
-    dataset_name = 'Rock'
     RUN = True
-    #dataset_name = 'HandOutlines'
     dataset_name = 'Rock' # PigCVP
     #lengths = [100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
     lengths = [100, 200, 300, 400, 600, 800, 1000, 1300, 1600, 2000] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
