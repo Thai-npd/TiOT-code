@@ -93,9 +93,10 @@ def read_result(result_file):
                     results[name].append(None)
 
 def main():
-    #dataset_name = 'Rock'
-    dataset_name = 'HandOutlines'
-    lengths = [100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
+    dataset_name = 'Rock'
+    #dataset_name = 'HandOutlines'
+    #lengths = [100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
+    lengths = [100, 200, 300, 400, 600, 800, 1000, 1300, 1600, 2000] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
     metrics = [TiOT, eTiOT, fast_eTiOT, eTAOT]
     result_file = os.path.join("runningtime_data", f"Results runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).csv")
     plot_file = os.path.join("runningtime_data", f"Plot runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).pdf")
