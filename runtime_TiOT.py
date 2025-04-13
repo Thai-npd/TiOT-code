@@ -91,18 +91,27 @@ def read_result(result_file):
                     results[name].append(float(row[i + 1]))
                 else:
                     results[name].append(None)
+    return results
 
 def main():
+    dataset_name = 'Rock'
+    RUN = True
+    #dataset_name = 'HandOutlines'
     dataset_name = 'Rock' # PigCVP
     #lengths = [100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
     lengths = [100, 200, 300, 400, 600, 800, 1000, 1300, 1600, 2000] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
     metrics = [TiOT, eTiOT, fast_eTiOT, eTAOT]
     result_file = os.path.join("runningtime_data", f"Results runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).csv")
     plot_file = os.path.join("runningtime_data", f"Plot runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).pdf")
-    X1, X2 = process_data(dataset_name, start1=0, start2=10, numpoint=1)
-    results = combine_runtimes(X1, X2, metrics, lengths)
-    plot_runtime(results, plot_file)
-    save_result(results, result_file)
-    #read_result(result_file)
+
+    if RUN:
+        X1, X2 = process_data(dataset_name, start1=0, start2=10, numpoint=1)
+        results = combine_runtimes(X1, X2, metrics, lengths)
+        save_result(results, result_file)
+        plot_runtime(results, plot_file)
+    else:
+        results = read_result(result_file)
+        plot_runtime(results, plot_file)
+
 
 main()
