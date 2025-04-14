@@ -2,9 +2,6 @@ import numpy as np
 import ot
 from scipy.optimize import linprog
 
-
-
-
 def normalization(x,y):
     """
     Normalize input time series by formular

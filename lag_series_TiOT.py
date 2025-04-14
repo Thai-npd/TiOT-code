@@ -20,7 +20,7 @@ def plot_graph(results, plot_file):
     linestyles = ['-', '--', '-.', ':', '-', '-', '-', '-']
     i = 0
     for name in metric_names:
-        plt.plot(lags, results[name], label = name, linewidth=1.75, marker = markers[i], linestyle = linestyles[i])
+        plt.plot(lags, results[name], label = name, linewidth=1.75, linestyle = linestyles[i])
         i+=1
     plt.xlabel("Lag (days)", fontsize = 14)
     plt.ylabel("Distance", fontsize = 14)
@@ -30,31 +30,16 @@ def plot_graph(results, plot_file):
     plt.show()
 
 def save_result(results, result_file):
-    with open(result_file, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(results.keys())  # header
-        rows = zip(*results.values())    # transpose
-        writer.writerows(rows)  
+    df = pd.DataFrame(results)
+    df.to_csv(result_file, index=False)
 
 def read_result(result_file):
-    results = {}
-    with open(result_file, "r") as f:
-        reader = csv.reader(f)
-        header = next(reader)
-        alg_names = header[1:]
-        results['lag'] = []
-        for name in alg_names:
-            results[name] = []
-        for row in reader:
-            results['lag'].append(row[0])
-            for i, name in enumerate(alg_names):
-                if row[i+1] != '':
-                    results[name].append(float(row[i + 1]))
-                else:
-                    results[name].append(None)
+    df = pd.read_csv(result_file)
+    results = df.to_dict(orient='list')
+    return results
 
 def main():
-    RUN = True
+    RUN = False
     lags = range(0, 730)
     length = 365
     file_path = 'DailyDelhiClimateTrain.csv'
@@ -82,3 +67,25 @@ def main():
         plot_graph(results, plot_file)
 
 main()
+
+    #results = {}
+    # with open(result_file, "r") as f:
+    #     reader = csv.reader(f)
+    #     header = next(reader)
+    #     alg_names = header[1:]
+    #     results['lag'] = []
+    #     for name in alg_names:
+    #         results[name] = []
+    #     for row in reader:
+    #         results['lag'].append(row[0])
+    #         for i, name in enumerate(alg_names):
+    #             if row[i+1] != '':
+    #                 results[name].append(float(row[i + 1]))
+    #             else:
+    #                 results[name].append(None)
+
+    # with open(result_file, 'w', newline='') as f:
+    #     writer = csv.writer(f)
+    #     writer.writerow(results.keys())  # header
+    #     rows = zip(*results.values())    # transpose
+    #     writer.writerows(rows)  

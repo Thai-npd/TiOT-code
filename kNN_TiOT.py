@@ -11,6 +11,7 @@ import multiprocessing
 from sklearn.metrics import accuracy_score
 from tqdm import tqdm
 import csv
+import time
 
 
 eps_global = 0.01
@@ -62,31 +63,20 @@ def kNN(dataset_name, data, metric_name , eps , w ):
         metric = 'euclidean'
     elif metric_name == 'eTAOT':
         metric = eTAOT
-    elif metric_name == 'fast_eTiOT':
+    elif metric_name == 'eTiOT(k = 20)':
         metric = fast_eTiOT
     X_train, Y_train, X_test, Y_test = data[0], data[1], data[2], data[3]
     knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
     knn.fit(X_train, Y_train)
+    start_time = time.perf_counter()
     with multiprocessing.Pool(50) as pool:
         y_pred = list(tqdm(pool.imap(knn.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
     pool.close()
+    end_time = time.perf_counter()
     accuracy = accuracy_score(Y_test, y_pred)
     error = 1 - accuracy
     print(f"  ====>  Completed dataset: {dataset_name}, Metric : {metric_name}, Error:",error)
-    return error
-
-def experiment_kNN(dataset_name, eps_TAOT, w_TAOT ):
-    data = process_data(dataset_name= dataset_name)
-    errors = []
-    eps_list = [-1, -1.4, -1.8, -2]
-    errors.append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps_TAOT, w = w_TAOT))
-    csv_filename = "euclid_kNN.csv"
-
-    # Append data to the CSV file
-    with open(csv_filename, mode="a", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow([dataset_name] + errors)
-    print("Complete saving results")
+    return error, end_time - start_time
 
 def experiment_kNNgraph(dataset_name, w_TAOT, read_result = False):
     eps_list = [0.01*i for i in range(1,11)]
@@ -97,11 +87,11 @@ def experiment_kNNgraph(dataset_name, w_TAOT, read_result = False):
     if read_result == False:
         data = process_data(dataset_name= dataset_name)
         w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
-        alg_names = ["eTiOT", "fast_eTiOT"]  +  [f"eTAOT(w = {w})" for w in w_list]
+        alg_names = ["eTiOT", "eTiOT(k = 20)"]  +  [f"eTAOT(w = {w})" for w in w_list]
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
         for eps in eps_list:
             results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = w_TAOT))
-            results['fast_eTiOT'].append(kNN(dataset_name, data, metric_name='fast_eTiOT', eps = eps, w = w_TAOT))
+            results['eTiOT(k = 20)'].append(kNN(dataset_name, data, metric_name='eTiOT(k = 20)', eps = eps, w = w_TAOT))
             for w in w_list:
                 results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
     else:
@@ -114,15 +104,15 @@ def experiment_kNNgraph(dataset_name, w_TAOT, read_result = False):
                 results[name] = []
             for row in reader:
                 for i, name in enumerate(alg_names):
-                    results[name].append(float(row[i + 1]))
+                    results[name].append(row[i + 1])
 
     sns.set(style="whitegrid", context="paper")
     plt.figure(figsize=(8, 5))
     markers = ['o', 's', '^', 'D', 'v', 'P', 'X']
     i = 0
     for name in alg_names:
-        plt.scatter(eps_list, results[name], marker=markers[i])
-        plt.plot(eps_list, results[name], label = name, linewidth=1.75)
+        #plt.scatter(eps_list, results[name], marker=markers[i])
+        plt.plot(eps_list, results[name][0], label = name, linewidth=1.75, marker=markers[i])
         i+=1
     plt.xlabel(r"$\varepsilon$", fontsize = 14)
     plt.ylabel("Error", fontsize = 14)
@@ -140,13 +130,13 @@ def experiment_kNNgraph(dataset_name, w_TAOT, read_result = False):
 if __name__ == "__main__":
     # experiment_kNNgraph("CBF", 1)
     # experiment_kNNgraph("DistalPhalanxOutlineAgeGroup", 1)
-    # experiment_kNNgraph("SonyAIBORobotSurface1", 2, read_result=True)
+    experiment_kNNgraph("SonyAIBORobotSurface1", 2)
     # experiment_kNNgraph("ProximalPhalanxTW", 0.7)
     # experiment_kNNgraph('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_kNNgraph('ProximalPhalanxOutlineAgeGroup', 0.1)
     # experiment_kNNgraph('MiddlePhalanxOutlineCorrect', 0.5)
 
-    experiment_kNNgraph('Adiac',0.1)
+    #experiment_kNNgraph('Adiac',0.1)
     #experiment_kNNgraph("ECG200", 3)
     #experiment_kNNgraph('SwedishLeaf',0.9)
     #experiment_kNNgraph('SyntheticControl', 4)
