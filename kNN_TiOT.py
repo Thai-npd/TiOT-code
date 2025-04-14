@@ -70,14 +70,14 @@ def kNN(dataset_name, data, metric_name , eps , w ):
     knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
     knn.fit(X_train, Y_train)
     start_time = time.perf_counter()
-    with multiprocessing.Pool(5) as pool:
+    with multiprocessing.Pool(50) as pool:
         y_pred = list(tqdm(pool.imap(knn.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
     pool.close()
     end_time = time.perf_counter()
     accuracy = accuracy_score(Y_test, y_pred)
     error = 1 - accuracy
     print(f"  ====>  Completed dataset: {dataset_name}, Metric : {metric_name}, Error:",error)
-    return [error, end_time - start_time]
+    return error, end_time - start_time
 
 def plot_results(results, plot_file):
     eps_list = results['eps']
@@ -87,9 +87,7 @@ def plot_results(results, plot_file):
     markers = ['o', 's', '^', 'D', 'v', 'P', 'X']
     i = 0
     for name in alg_names:
-        #plt.scatter(eps_list, results[name], marker=markers[i])
-        print(np.array(results[name]))
-        plt.plot(eps_list, np.array(results[name])[:,0], label = name, linewidth=1.75, marker=markers[i])
+        plt.plot(eps_list, np.array(results[name]), label = name, linewidth=1.75, marker=markers[i])
         i+=1
     plt.xlabel(r"$\varepsilon$", fontsize = 14)
     plt.ylabel("Error", fontsize = 14)
@@ -112,6 +110,7 @@ def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
     eps_list = [0.01*i for i in range(1,11)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
     plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
+    time_plot_file = os.path.join("kNN_data", "plots","Time record of " + dataset_name + eps_name + '.pdf')
     result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
     time_record_file = os.path.join("kNN_data", "saved_results","Time record of " + dataset_name + eps_name + '.csv')
     if RUN :
@@ -133,15 +132,19 @@ def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
                 time_record[f"eTAOT(w = {w})"].append(elapsed_time)
 
         save_result(results, result_file)
+        save_result(time_record, time_record_file)
         plot_results(results, plot_file)
+        plot_results(time_record, time_plot_file)
     else:
         results = read_result(result_file)
+        time_record = read_result(time_record_file)
         plot_results(results, plot_file)
+        plot_results(time_record, time_plot_file)
  
 if __name__ == "__main__":
     # experiment_kNNgraph("CBF", 1)
     # experiment_kNNgraph("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_kNNgraph("SonyAIBORobotSurface1", 2, RUN=False)
+    # experiment_kNNgraph("SonyAIBORobotSurface1", 2)
     # experiment_kNNgraph("ProximalPhalanxTW", 0.7)
     # experiment_kNNgraph('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_kNNgraph('ProximalPhalanxOutlineAgeGroup', 0.1)
@@ -149,7 +152,7 @@ if __name__ == "__main__":
 
     #experiment_kNNgraph('Adiac',0.1)
     #experiment_kNNgraph("ECG200", 3)
-    #experiment_kNNgraph('SwedishLeaf',0.9)
+    experiment_kNNgraph('SwedishLeaf',0.9)
     #experiment_kNNgraph('SyntheticControl', 4)
     #experiment_kNNgraph('Chinatown', 1)
     #experiment_kNNgraph('ItalyPowerDemand', 7)
