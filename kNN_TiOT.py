@@ -70,7 +70,7 @@ def kNN(dataset_name, data, metric_name , eps , w ):
     knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
     knn.fit(X_train, Y_train)
     start_time = time.perf_counter()
-    with multiprocessing.Pool(50) as pool:
+    with multiprocessing.Pool(5) as pool:
         y_pred = list(tqdm(pool.imap(knn.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
     pool.close()
     end_time = time.perf_counter()

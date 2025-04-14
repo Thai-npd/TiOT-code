@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from collections import defaultdict
 import seaborn as sns
 import matplotlib.pyplot as plt
 import TiOT_lib
@@ -40,6 +39,7 @@ def read_result(result_file):
 
 def main():
     RUN = True
+    start = 0
     lags = range(0, 730)
     length = 365
     file_path = 'DailyDelhiClimateTrain.csv'
@@ -56,9 +56,9 @@ def main():
 
     if RUN:
         for lag in lags:
-            results['TiOT'].append(TiOT(df['meantemp'].iloc[:length], df['meantemp'].iloc[lag:lag+length])[0])
+            results['TiOT'].append(TiOT(df['meantemp'].iloc[start:start + length], df['meantemp'].iloc[start + lag:start + lag+length])[0])
             for w in w_list:
-                results[f'TAOT(w = {w})'].append(TAOT(df['meantemp'].iloc[:length], df['meantemp'].iloc[lag:lag+length], w = w)[0])
+                results[f'TAOT(w = {w})'].append(TAOT(df['meantemp'].iloc[start:start + length], df['meantemp'].iloc[start + lag:start + lag+length], w = w)[0])
             print(f"Done Lag = {lag}")
         save_result(results, result_file)
         plot_graph(results, plot_file)
