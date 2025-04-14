@@ -38,7 +38,7 @@ def read_result(result_file):
     return results
 
 def main():
-    RUN = False
+    RUN = True
     start = 0
     lags = range(0, 730)
     length = 365
@@ -47,7 +47,7 @@ def main():
     df['date'] = pd.to_datetime(df['date'])
     df.set_index('date', inplace=True)
 
-    w_list = [0.25, 0.5, 0.75]
+    w_list = [0.2, 0.5, 0.8]
     metric_names = ['TiOT'] + [f"TAOT(w = {w})" for w in w_list]
     results = {**{'lag' : lags}, **{name: [] for name in metric_names}}
 

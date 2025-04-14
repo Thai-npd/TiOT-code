@@ -16,11 +16,12 @@ import time
 
 eps_global = 0.01
 w_global = 10
+k_global = 20
 def eTiOT(X1, X2):
     return TiOT_lib.eTiOT(X1,X2, eps=eps_global)[0]
 
 def fast_eTiOT(X1, X2):
-    return TiOT_lib.eTiOT(X1,X2, eps=eps_global, w_update_freq=20)[0]
+    return TiOT_lib.eTiOT(X1,X2, eps=eps_global, w_update_freq=k_global)[0]
 
 def eTAOT(X1, X2):
     return TiOT_lib.eTAOT(X1,X2, eps = eps_global)[0]
@@ -63,7 +64,7 @@ def kNN(dataset_name, data, metric_name , eps , w ):
         metric = 'euclidean'
     elif metric_name == 'eTAOT':
         metric = eTAOT
-    elif metric_name == 'eTiOT(k = 20)':
+    elif metric_name == f'eTiOT(k = {k_global})':
         metric = fast_eTiOT
     X_train, Y_train, X_test, Y_test = data[0], data[1], data[2], data[3]
     knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
@@ -76,43 +77,18 @@ def kNN(dataset_name, data, metric_name , eps , w ):
     accuracy = accuracy_score(Y_test, y_pred)
     error = 1 - accuracy
     print(f"  ====>  Completed dataset: {dataset_name}, Metric : {metric_name}, Error:",error)
-    return error, end_time - start_time
+    return [error, end_time - start_time]
 
-def experiment_kNNgraph(dataset_name, w_TAOT, read_result = False):
-    eps_list = [0.01*i for i in range(1,11)]
-    eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
-    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
-    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
-
-    if read_result == False:
-        data = process_data(dataset_name= dataset_name)
-        w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
-        alg_names = ["eTiOT", "eTiOT(k = 20)"]  +  [f"eTAOT(w = {w})" for w in w_list]
-        results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
-        for eps in eps_list:
-            results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = w_TAOT))
-            results['eTiOT(k = 20)'].append(kNN(dataset_name, data, metric_name='eTiOT(k = 20)', eps = eps, w = w_TAOT))
-            for w in w_list:
-                results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
-    else:
-        results = {'eps': eps_list}
-        with open(result_file, "r") as f:
-            reader = csv.reader(f)
-            header = next(reader)
-            alg_names = header[1:]
-            for name in alg_names:
-                results[name] = []
-            for row in reader:
-                for i, name in enumerate(alg_names):
-                    results[name].append(row[i + 1])
-
+def plot_results(results, plot_file):
+    eps_list = results['eps']
+    alg_names = [k for k in results.keys() if k != 'len']
     sns.set(style="whitegrid", context="paper")
     plt.figure(figsize=(8, 5))
     markers = ['o', 's', '^', 'D', 'v', 'P', 'X']
     i = 0
     for name in alg_names:
         #plt.scatter(eps_list, results[name], marker=markers[i])
-        plt.plot(eps_list, results[name][0], label = name, linewidth=1.75, marker=markers[i])
+        plt.plot(eps_list, results[name][:,0], label = name, linewidth=1.75, marker=markers[i])
         i+=1
     plt.xlabel(r"$\varepsilon$", fontsize = 14)
     plt.ylabel("Error", fontsize = 14)
@@ -121,12 +97,38 @@ def experiment_kNNgraph(dataset_name, w_TAOT, read_result = False):
     plt.savefig(plot_file, dpi=300)  # High-resolution
     plt.show()
 
-    with open(result_file, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(results.keys())  # header
-        rows = zip(*results.values())    # transpose
-        writer.writerows(rows)  
 
+def save_result(results, result_file):
+    df = pd.DataFrame(results)
+    df.to_csv(result_file, index=False)
+
+def read_result(result_file):
+    df = pd.read_csv(result_file)
+    results = df.to_dict(orient='list')
+    return results
+
+def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
+    eps_list = [0.01*i for i in range(1,11)]
+    eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
+    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
+    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
+
+    if RUN :
+        data = process_data(dataset_name= dataset_name)
+        w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
+        alg_names = ["eTiOT", f"eTiOT(k = {k_global})"]  +  [f"eTAOT(w = {w})" for w in w_list]
+        results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
+        for eps in eps_list:
+            results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = w_TAOT))
+            results[f'eTiOT(k = {k_global})'].append(kNN(dataset_name, data, metric_name=f'eTiOT(k = {k_global})', eps = eps, w = w_TAOT))
+            for w in w_list:
+                results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
+        save_result(results, result_file)
+        plot_results(results, plot_file)
+    else:
+        results = read_result(result_file)
+        plot_results(results, plot_file)
+ 
 if __name__ == "__main__":
     # experiment_kNNgraph("CBF", 1)
     # experiment_kNNgraph("DistalPhalanxOutlineAgeGroup", 1)
