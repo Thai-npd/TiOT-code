@@ -69,28 +69,12 @@ def plot_runtime(results, plot_file):
     plt.show()
 
 def save_result(results, result_file):
-    with open(result_file, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(results.keys())  # header
-        rows = zip(*results.values())    # transpose
-        writer.writerows(rows)  
+    df = pd.DataFrame(results)
+    df.to_csv(result_file, index=False)
 
 def read_result(result_file):
-    results = {}
-    with open(result_file, "r") as f:
-        reader = csv.reader(f)
-        header = next(reader)
-        alg_names = header[1:]
-        results['len'] = []
-        for name in alg_names:
-            results[name] = []
-        for row in reader:
-            results['len'].append(row[0])
-            for i, name in enumerate(alg_names):
-                if row[i+1] != '':
-                    results[name].append(float(row[i + 1]))
-                else:
-                    results[name].append(None)
+    df = pd.read_csv(result_file)
+    results = df.to_dict(orient='list')
     return results
 
 def main():
