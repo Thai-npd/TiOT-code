@@ -69,7 +69,7 @@ def kNN(dataset_name, data, metric_name , eps , w ):
     X_train, Y_train, X_test, Y_test = data[0], data[1], data[2], data[3]
     knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
     knn.fit(X_train, Y_train)
-    with multiprocessing.Pool(50) as pool:
+    with multiprocessing.Pool(1) as pool:
         y_pred = list(tqdm(pool.imap(knn.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
     pool.close()
     accuracy = accuracy_score(Y_test, y_pred)
@@ -130,7 +130,7 @@ def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
 if __name__ == "__main__":
     # experiment_kNNgraph("CBF", 1, RUN=False)
     # experiment_kNNgraph("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_kNNgraph("SonyAIBORobotSurface1", 2, RUN=False)
+    experiment_kNNgraph("SonyAIBORobotSurface1", 2)
     # experiment_kNNgraph("ProximalPhalanxTW", 0.7)
     # experiment_kNNgraph('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_kNNgraph('ProximalPhalanxOutlineAgeGroup', 0.1)

@@ -106,7 +106,7 @@ def TiOT(x, y, a = None, b = None, detail_mode = False, verbose = False):
 
 
 
-def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.005, solver = 'newton', subprob_tol = 10**-7, w_update_freq = 1, verbose = False):
+def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.005, solver = 'newton', subprob_tol = 10**-7, w_update_freq = 1, verbose = 2):
     """
     Solves the entropic Time-integrated Optimal Transport (eTiOT) problem use block coordinate descent.
 
@@ -138,7 +138,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
         for j in range(m):
             value_diff[i,j] = np.linalg.norm(x[i] - y[j])**2
             time_diff[i,j] = (t[i] - s[j])**2
-    TV = time_diff - value_diff
+    TV = (time_diff - value_diff)
 
     def newton(g,h, w, subprob_tol = 10**-7, maxIter = 10):
         def f(w):
@@ -152,7 +152,6 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
             df = g.T @ ((TV * K) @ h)
             df2 = (1/eps) * g.T @ (((TV**2) * K) @ h)
             return df, df2 
-        
         for i in range(maxIter):
             dfw, df2w = df12(w)
             w = w - dfw / df2w
