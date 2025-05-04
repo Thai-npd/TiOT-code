@@ -158,7 +158,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
             w = w - dfw / df2w
             if np.abs(dfw) < subprob_tol or w >=1  or w <= 0 :
                 if verbose > 1: 
-                    print(f"Newton Algorithm converges after {i+1} iterations")
+                    print(f"Newton Algorithm converges after {i+1} iterations with w = {w}, df = {dfw}, df2 = {df2w}")
                 if 0 < w < 1: 
                     break
                 elif w >= 1: 
