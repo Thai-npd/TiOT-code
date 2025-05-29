@@ -12,6 +12,8 @@ from sklearn.metrics import accuracy_score
 from tqdm import tqdm
 import csv
 import time
+from sklearn.metrics.cluster import rand_score
+from sklearn.cluster import KMeans
 
 
 eps_global = 0.01
@@ -66,14 +68,14 @@ def kNN(dataset_name, data, metric_name , eps , w ):
         metric = eTAOT
     elif metric_name == f'eTiOT(k = {k_global})':
         metric = fast_eTiOT
-    X_train, Y_train, X_test, Y_test = data[0], data[1], data[2], data[3]
-    knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
-    knn.fit(X_train, Y_train)
-    with multiprocessing.Pool(50) as pool:
-        y_pred = list(tqdm(pool.imap(knn.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
-    pool.close()
-    accuracy = accuracy_score(Y_test, y_pred)
+    X = data[2]
+    y = data[3]
+    kmeans = KMeans(n_clusters=2, random_state=42)
+    clusters = kmeans.fit_predict(X)
+    accuracy = rand_score(y, clusters)
     error = 1 - accuracy
+    print(f"================> Cluster: {clusters}\n\n")
+    print(f"================> True labels: {y}\n\n")
     print(f"  ====>  Completed dataset: {dataset_name}, Metric : {metric_name}, Error:",error)
     return error
 
@@ -108,24 +110,18 @@ def read_result(result_file):
 def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
     eps_list = [0.01*i for i in range(1,11)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
-    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
-    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
+    plot_file = os.path.join("KMeans_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
+    result_file = os.path.join("KMeans_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
     if RUN :
         data = process_data(dataset_name= dataset_name)
-        w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
-        alg_names = ["eTiOT", f"eTiOT(k = {k_global})"]  +  [f"eTAOT(w = {w})" for w in w_list]
-        results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
-        for eps in eps_list:
-            results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = w_TAOT))
-            results[f'eTiOT(k = {k_global})'].append(kNN(dataset_name, data, metric_name=f'eTiOT(k = {k_global})', eps = eps, w = w_TAOT))
-            for w in w_list:
-                results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
+        kNN(dataset_name, data, metric_name='oriTAOT', eps = 10, w = 10)
 
-        save_result(results, result_file)
-        plot_results(results, plot_file)
+        #save_result(results, result_file)
+        #plot_results(results, plot_file)
     else:
-        results = read_result(result_file)
-        plot_results(results, plot_file)
+        #results = read_result(result_file)
+        #plot_results(results, plot_file)
+        print()
  
 if __name__ == "__main__":
     # experiment_kNNgraph("CBF", 1, RUN=False)
