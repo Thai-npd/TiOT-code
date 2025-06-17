@@ -13,7 +13,9 @@ from tqdm import tqdm
 import csv
 import time
 from sklearn.metrics.cluster import rand_score
+from sklearn.cluster import AgglomerativeClustering
 from sklearn.cluster import KMeans
+from itertools import combinations
 
 
 eps_global = 0.01
@@ -30,6 +32,9 @@ def eTAOT(X1, X2):
 
 def oriTAOT(X1, X2):
     return TiOT_lib.eTAOT(X1,X2, w = w_global, eps = eps_global, costmatrix=TiOT_lib.costmatrix0)[0]
+
+def euclidean(X1, X2):
+    return np.sqrt(np.sum((np.array(X1) - np.array(X2))**2))
 
 def process_data(dataset_name ):
     train_file = os.path.join("time_series_kNN", dataset_name, dataset_name + "_TRAIN.txt" )
@@ -54,6 +59,33 @@ def process_data(dataset_name ):
     X_test = [row[1:] for row in data_test]
     return [X_train, Y_train, X_test, Y_test]
 
+def compute_distance(args):
+    i, j, Xi, Xj, metric = args
+    return (i, j, metric(Xi, Xj))
+
+def compute_distance_matrix(X, metric):
+    # n = len(X)
+    # distance_matrix = np.zeros((n,n))
+    # for i in range(n):
+    #     for j in range(i+1, n):
+    #         distance_matrix[i,j] = metric(X[i], X[j])
+    #     print(f"Done {i}/{n}")
+    # distance_matrix = distance_matrix + distance_matrix.T
+    # return distance_matrix
+
+    n = len(X)
+    total_pairs = (n * (n - 1)) // 2  # number of unique i < j pairs
+    pairs_gen = [(i, j, X[i], X[j], metric) for i, j in combinations(range(n), 2)]  # generator
+    #print(pairs_gen)
+    D = np.zeros((n, n))
+    # for a in Pool(5).imap(compute_pair, pairs_gen):
+    #     print(a)
+    with multiprocessing.Pool(5) as pool:
+        for i, j, d in tqdm(pool.imap(compute_distance, pairs_gen), total=total_pairs):
+            D[i, j] = D[j, i] = d
+
+    return D
+
 def kNN(dataset_name, data, metric_name , eps , w ):
     global w_global, eps_global
     w_global = w
@@ -63,19 +95,25 @@ def kNN(dataset_name, data, metric_name , eps , w ):
     elif metric_name == "eTiOT":
         metric = eTiOT
     elif metric_name == 'euclidean':
-        metric = 'euclidean'
+        metric = euclidean
     elif metric_name == 'eTAOT':
         metric = eTAOT
     elif metric_name == f'eTiOT(k = {k_global})':
         metric = fast_eTiOT
-    X = data[2]
-    y = data[3]
-    kmeans = KMeans(n_clusters=2, random_state=42)
-    clusters = kmeans.fit_predict(X)
-    accuracy = rand_score(y, clusters)
+    X = data[0]
+    y = data[1]
+    distance_matrix = compute_distance_matrix(X, metric)
+    print('number of cluseter ', len(set(y)))
+    agglo = AgglomerativeClustering(
+    n_clusters=len(set(y)),
+    metric='precomputed',  # For older versions < 1.2
+    linkage='average'        # Only 'average' or 'complete' are valid with precomputed distances
+    )
+    y_pred = agglo.fit_predict(distance_matrix)
+    accuracy = rand_score(y, y_pred)
     error = 1 - accuracy
-    print(f"================> Cluster: {clusters}\n\n")
-    print(f"================> True labels: {y}\n\n")
+    # print(f"================> Predictions: {y_pred}\n\n")
+    # print(f"================> True labels: {y}\n\n")
     print(f"  ====>  Completed dataset: {dataset_name}, Metric : {metric_name}, Error:",error)
     return error
 
@@ -108,14 +146,21 @@ def read_result(result_file):
     return results
 
 def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
-    eps_list = [0.01*i for i in range(1,11)]
+    eps_list = [0.01]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
     plot_file = os.path.join("KMeans_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
     result_file = os.path.join("KMeans_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
     if RUN :
         data = process_data(dataset_name= dataset_name)
-        kNN(dataset_name, data, metric_name='oriTAOT', eps = 10, w = 10)
-
+        #kNN(dataset_name, data, metric_name='oriTAOT', eps =0.1, w = 2)
+        w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
+        alg_names = ["eTiOT", f"eTiOT(k = {k_global})"]  +  [f"eTAOT(w = {w})" for w in w_list]
+        results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
+        for eps in eps_list:
+            #results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = w_TAOT))
+            results[f'eTiOT(k = {k_global})'].append(kNN(dataset_name, data, metric_name=f'eTiOT(k = {k_global})', eps = eps, w = w_TAOT))
+            for w in w_list:
+                results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
         #save_result(results, result_file)
         #plot_results(results, plot_file)
     else:
@@ -126,13 +171,13 @@ def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
 if __name__ == "__main__":
     # experiment_kNNgraph("CBF", 1, RUN=False)
     # experiment_kNNgraph("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_kNNgraph("SonyAIBORobotSurface1", 2)
+    # experiment_kNNgraph("SonyAIBORobotSurface1", 2)
     # experiment_kNNgraph("ProximalPhalanxTW", 0.7)
     # experiment_kNNgraph('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_kNNgraph('ProximalPhalanxOutlineAgeGroup', 0.1)
     # experiment_kNNgraph('MiddlePhalanxOutlineCorrect', 0.5)
 
-    #experiment_kNNgraph('Adiac',0.1)
+    experiment_kNNgraph('Adiac',0.1)
     #experiment_kNNgraph("ECG200", 3)
     #experiment_kNNgraph('SwedishLeaf',0.9)
     #experiment_kNNgraph('SyntheticControl', 4)
