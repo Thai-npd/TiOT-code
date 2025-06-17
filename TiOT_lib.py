@@ -106,7 +106,7 @@ def TiOT(x, y, a = None, b = None, detail_mode = False, verbose = False):
 
 
 
-def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.005, solver = 'newton', subprob_tol = 10**-7, w_update_freq = 1, verbose = 2):
+def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.005, solver = 'newton', subprob_tol = 10**-7, w_update_freq = 1, verbose = False):
     """
     Solves the entropic Time-integrated Optimal Transport (eTiOT) problem use block coordinate descent.
 
@@ -173,16 +173,49 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
         K = np.exp(-C/eps)
         return w, K
     
+    def PGD(g,h, w, subprob_tol = 10**-7, maxIter = 1000, eta = 10**-2):
+        def f(w):
+            C = w*value_diff + (1-w)*time_diff
+            K = np.exp(-C/eps)
+            return  -eps * np.log(g) @ a - eps * np.log(h) @ b + eps * (g.T @ K @ h)
+        
+        def df(w):
+            nC =  w * TV - time_diff 
+            K = np.exp(nC/(eps))
+            return g.T @ ((TV * K) @ h)
+        
+        def prox_g(w, stepsize):
+            if w > 1:
+                w = 1
+            elif w < 0:
+                w = 0
+            return w 
+
+        for i in range(maxIter):
+            w_prev = w
+            w = w - eta*df(w)
+            w = prox_g(w, eta)
+            if np.abs(w-w_prev) < subprob_tol:
+                #print(f"PGD Algorithm converges after {i+1} iterations with w = {w}")
+                break
+        if i == maxIter: print(f"PGD Algorithm does not converge after {i} iterations")
+        C = w*value_diff + (1-w)*time_diff
+        K = np.exp(-C/eps)
+        return w, K
+
     g, h, w = np.ones(n)/n , np.ones(m)/m , 0.5
     C = w*value_diff + (1-w)*time_diff
     K = np.exp(-C/eps)
     curIter = 0
     if solver == 'newton': solver = newton
+    elif solver == "PGD":
+        solver = PGD
     else:
         print("For now, no other solvers is available! Choose 'newton' by default. ")
         solver = newton
 
     while curIter < maxIter:
+        #print(f"   ======>   Iteration {curIter}")
         g = a/ (K @ h)
         h = b/(K.T @ g)
         if curIter % w_update_freq ==0 :
