@@ -80,7 +80,7 @@ def compute_distance_matrix(X, metric):
     D = np.zeros((n, n))
     # for a in Pool(5).imap(compute_pair, pairs_gen):
     #     print(a)
-    with multiprocessing.Pool(5) as pool:
+    with multiprocessing.Pool(100) as pool:
         for i, j, d in tqdm(pool.imap(compute_distance, pairs_gen), total=total_pairs):
             D[i, j] = D[j, i] = d
 
@@ -169,7 +169,7 @@ def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
         print()
  
 if __name__ == "__main__":
-    # experiment_kNNgraph("CBF", 1, RUN=False)
+    # experiment_kNNgraph("CBF", 1)
     # experiment_kNNgraph("DistalPhalanxOutlineAgeGroup", 1)
     # experiment_kNNgraph("SonyAIBORobotSurface1", 2)
     # experiment_kNNgraph("ProximalPhalanxTW", 0.7)
@@ -177,9 +177,9 @@ if __name__ == "__main__":
     # experiment_kNNgraph('ProximalPhalanxOutlineAgeGroup', 0.1)
     # experiment_kNNgraph('MiddlePhalanxOutlineCorrect', 0.5)
 
-    experiment_kNNgraph('Adiac',0.1)
+    # experiment_kNNgraph('Adiac',0.1)
     #experiment_kNNgraph("ECG200", 3)
-    #experiment_kNNgraph('SwedishLeaf',0.9)
+    experiment_kNNgraph('SwedishLeaf',0.9)
     #experiment_kNNgraph('SyntheticControl', 4)
     #experiment_kNNgraph('Chinatown', 1)
     #experiment_kNNgraph('ItalyPowerDemand', 7)
