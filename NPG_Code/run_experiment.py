@@ -96,7 +96,7 @@ def experiment_nmf():
 def experiment_min_len_curve():
     clear_report_content("min_len_curve")
     seeds = [1,2,3,4,5,6,7,8,9,10]
-    size = [(50, 5000, 50000), (500, 5000, 2000), (2000, 5000, 200), (100, 10000, 50000), (1000, 10000, 2000), (2000, 10000, 1000)]
+    size = [(50, 5000, 50000), (500, 5000, 1500), (2000, 5000, 200), (100, 10000, 50000), (1000, 10000, 1500), (2000, 10000, 500)]
     all_results = {}
     row, col = 1,1
     for seed in seeds:
@@ -143,7 +143,7 @@ def experiment_maximum_likelyhood():
 
 
 def main():
-    experiment_lasso()
+    experiment_dual_max_entropy()
     
 
 

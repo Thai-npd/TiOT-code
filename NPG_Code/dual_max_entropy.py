@@ -11,7 +11,7 @@ LOAD_DATA = False
 SAVE_DATA = False
 LOAD_RESULTS = False
 SAVE_RESULTS = True
-PLOT = True
+PLOT = False
 ######################################################
 
 seed = 4
