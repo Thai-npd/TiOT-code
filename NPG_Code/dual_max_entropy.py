@@ -16,14 +16,14 @@ PLOT = True
 
 seed = 4
 m, n = 500,2000
+N = 200
 
-def run_dual_max_entropy(m = m, n = n, seed = seed):
+def run_dual_max_entropy(m = m, n = n, seed = seed, N = N):
     name = "dual_max_ent"
     name_instance = f"{name}_m={m}_n={n}_normal_seed={seed}"
     np.random.seed(seed)
     y0 = np.zeros(m + 1)
     tol = 1e-6
-    N = 200
 
     if LOAD_DATA:
         loaded_data = load(name_instance, name, saving_obj=1)

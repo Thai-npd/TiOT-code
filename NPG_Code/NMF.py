@@ -14,11 +14,11 @@ SAVE_RESULTS = True
 PLOT = False
 ######################################################
 
-seed = 1
+seed = 2
 m, r, n = 500, 20, 1000
+N = 2000
 
-
-def run_nmf(m = m, r = r, n = n, seed = seed):
+def run_nmf(m = m, r = r, n = n, seed = seed, N = N ):
     def f(X):
         U, V = X[:m], X[m:]
         return 0.5 * np.linalg.norm(np.dot(U, V.T) - A)**2
@@ -41,7 +41,6 @@ def run_nmf(m = m, r = r, n = n, seed = seed):
     name = "nonnegative_matrix_factorization"
     name_instance = f"nmf_m={m}_n={n}_r={r}_seed={seed}"
     tol = 1e-6
-    N = 2000
 
     if LOAD_DATA:
         loaded_data = load(name_instance, name, saving_obj=1)
