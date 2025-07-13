@@ -3,7 +3,8 @@ from save_and_plot import create_report, format_latex
 from openpyxl import load_workbook
 import numpy as np
 import os
-
+import multiprocessing
+from tqdm import tqdm
 
 name_workbook = 'Results_NPGlasso.xlsx'
 
@@ -65,15 +66,29 @@ def experiment_lasso():
     size = [(n, k*n) for n in [512, 1024, 2048] for k in [2,4,8] if k*n <= 8192]
     all_results = {}
     row, col = 1,1
-    for seed in seeds:
-        for m, n in size:
-            print(f"---------- Start seed = {seed}, m = {m}, n = {n} ----------")
-            results, name_instance, name, parameters = lasso.run_lasso(m, n, seed)
-            prepare_report((m, n), row, col, seed, seeds, results, name_instance, name, parameters, name_workbook, all_results)
+    # for seed in seeds:
+    #     for m, n in size:
+    #         print(f"---------- Start seed = {seed}, m = {m}, n = {n} ----------")
+    #         results, name_instance, name, parameters = lasso.run_lasso(m, n, seed)
+    #         #prepare_report((m, n), row, col, seed, seeds, results, name_instance, name, parameters, name_workbook, all_results)
 
-            col += 8
-        col = 1
-        row += len(results) + 4
+    #         col += 8
+    #     col = 1
+    #     row += len(results) + 4 
+    with multiprocessing.Pool(20) as pool:
+        args = [(m, n, seed) for m,n in size for seed in seeds]
+        results, name_instance, name, parameters = list(tqdm(pool.starmap(lasso.run_lasso, args), total=len(args)))
+
+    # for m, n in size:
+        #print(f"---------- Start m = {m}, n = {n} ----------")
+        # with multiprocessing.Pool(10) as pool:
+        #     results, name_instance, name, parameters = list(tqdm(pool.imap(lasso.run_lasso, [seed for seed in seeds]), total=len(seeds)))
+        #print(f"---------- End m = {m}, n = {n} ----------")
+
+    pool.close()
+        #results, name_instance, name, parameters = lasso.run_lasso(m, n, seed)
+            #prepare_report((m, n), row, col, seed, seeds, results, name_instance, name, parameters, name_workbook, all_results)
+
     print("\n ================= Successfully run all experiments ! =================")
 
 def experiment_nmf():

@@ -15,7 +15,9 @@ m = 512
 n = 2*m
 
 def run_lasso(m = m, n = n, seed = seed):
+    LOAD_RESULTS = True
     name = "lasso"
+    print(f"Start Lasso: m = {m}, n = {n}, seed = {seed}")
     np.random.seed(seed)
     tol = 1e-6
     N = 15000
@@ -75,10 +77,15 @@ def run_lasso(m = m, n = n, seed = seed):
 
     results = {}
     if LOAD_RESULTS:
-        loaded_results = load(name_instance, name, saving_obj=2)
-        for key, history in loaded_results.items():
-            results[key] = history
-    else: 
+        try:
+            loaded_results = load(name_instance, name, saving_obj=2)
+            for key, history in loaded_results.items():
+                results[key] = history
+        except:
+            print("Error happen when loading the results. Algorithms will be re-run from scratch.")
+            LOAD_RESULTS = False
+
+    if not LOAD_RESULTS : 
         x1, history1 = Run(NPG, params = [0.1, 5.7, 0.7, 0.69], ver=1)
         results["NPG1"] = history1
 
@@ -109,6 +116,8 @@ def run_lasso(m = m, n = n, seed = seed):
     make_all_plots(results, name_instance, name, plot_mse=True, plot=PLOT)
     if PLOT and not LOAD_RESULTS: compare_signals(xopt, x2)
     parameters = {"additional_info":f"lambda = {lamda:.2f}" , "size":f"({m}, {n})", "seed": seed}
+    print(f"End Lasso: m = {m}, n = {n}, seed = {seed}")
+
     return results, name_instance, name, parameters 
 
 if __name__ == "__main__":
