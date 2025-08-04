@@ -106,7 +106,7 @@ def TiOT(x, y, a = None, b = None, detail_mode = False, verbose = False):
 
 
 
-def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.005, solver = 'newton', subprob_tol = 10**-7, w_update_freq = 1, verbose = False):
+def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.005, solver = 'newton', subprob_tol = 10**-7, freq = 1, verbose = False):
     """
     Solves the entropic Time-integrated Optimal Transport (eTiOT) problem use block coordinate descent.
 
@@ -120,7 +120,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
         tolerance (float, optional): Convergence tolerance for BCD. Default is 0.005.
         solver (str, optional): Method used for finding optimal w. Default is 'newton'.
         subprob_tol (float, optional): Tolerance for solving the inner subproblem (e.g., newton). Default is 1e-7.
-        w_update_freq (int, optional): Frequency (in iterations) at which the weight variable `w` is updated. Default is 1.
+        freq (int, optional): Frequency (in iterations) at which the weight variable `w` is updated. Default is 1.
         verbose (bool, optional): If True, prints progress. Default is False.
 
     Returns:
@@ -173,7 +173,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
         K = np.exp(-C/eps)
         return w, K
     
-    def PGD(g,h, w, subprob_tol = 10**-7, maxIter = 1000, eta = 10**-2):
+    def PGD(g,h, w, subprob_tol = 10**-7, maxIter = 100, eta = 10**-2):
         def f(w):
             C = w*value_diff + (1-w)*time_diff
             K = np.exp(-C/eps)
@@ -184,7 +184,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
             K = np.exp(nC/(eps))
             return g.T @ ((TV * K) @ h)
         
-        def prox_g(w, stepsize):
+        def proj(w):
             if w > 1:
                 w = 1
             elif w < 0:
@@ -193,8 +193,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
 
         for i in range(maxIter):
             w_prev = w
-            w = w - eta*df(w)
-            w = prox_g(w, eta)
+            w = proj(w - eta*df(w))
             if np.abs(w-w_prev) < subprob_tol:
                 #print(f"PGD Algorithm converges after {i+1} iterations with w = {w}")
                 break
@@ -208,23 +207,21 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
     K = np.exp(-C/eps)
     curIter = 0
     if solver == 'newton': solver = newton
-    elif solver == "PGD":
-        solver = PGD
     else:
-        print("For now, no other solvers is available! Choose 'newton' by default. ")
-        solver = newton
+        if verbose == True: 
+            print("Choose 'PGD' by default. ")
+        solver = PGD
 
     while curIter < maxIter:
         #print(f"   ======>   Iteration {curIter}")
         g = a/ (K @ h)
         h = b/(K.T @ g)
-        if curIter % w_update_freq ==0 :
+        if curIter % freq ==0 :
             w,  K = solver(g,h, w, subprob_tol= subprob_tol)
-        if curIter % 20 == 0:
-            if np.sum(np.abs(g * (K @ h) - a)) < tolerance : 
-                if verbose == True: 
-                    print(f"TiOT-BCD Algorithm converges after {curIter+1} iterations")
-                break
+        if curIter % freq == 0 and np.sum(np.abs(g * (K @ h) - a)) < tolerance:
+            if verbose == True: 
+                print(f"TiOT-BCD Algorithm converges after {curIter+1} iterations")
+            break
         curIter += 1
     if verbose == True:
         if curIter == maxIter: print(f"TiOT algorithm did not stop after {maxIter} iterations")

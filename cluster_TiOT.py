@@ -146,7 +146,7 @@ def read_result(result_file):
     return results
 
 def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
-    eps_list = [0.01]
+    eps_list = [0.1]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
     plot_file = os.path.join("KMeans_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
     result_file = os.path.join("KMeans_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
@@ -154,10 +154,11 @@ def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
         data = process_data(dataset_name= dataset_name)
         #kNN(dataset_name, data, metric_name='oriTAOT', eps =0.1, w = 2)
         w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
-        alg_names = ["eTiOT", f"eTiOT(k = {k_global})"]  +  [f"eTAOT(w = {w})" for w in w_list]
+        alg_names = ["eTiOT", f"eTiOT(k = {k_global})"]  +  [f"eTAOT(w = {w})" for w in w_list] + ['euclid']
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
         for eps in eps_list:
             #results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = w_TAOT))
+            results['euclid'].append(kNN(dataset_name, data, metric_name='euclidean', eps = eps, w = w_TAOT))
             results[f'eTiOT(k = {k_global})'].append(kNN(dataset_name, data, metric_name=f'eTiOT(k = {k_global})', eps = eps, w = w_TAOT))
             for w in w_list:
                 results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
@@ -178,8 +179,8 @@ if __name__ == "__main__":
     # experiment_kNNgraph('MiddlePhalanxOutlineCorrect', 0.5)
 
     # experiment_kNNgraph('Adiac',0.1)
-    #experiment_kNNgraph("ECG200", 3)
-    experiment_kNNgraph('SwedishLeaf',0.9)
+    experiment_kNNgraph("ECG200", 3)
+    #experiment_kNNgraph('SwedishLeaf',0.9)
     #experiment_kNNgraph('SyntheticControl', 4)
     #experiment_kNNgraph('Chinatown', 1)
     #experiment_kNNgraph('ItalyPowerDemand', 7)

@@ -18,10 +18,7 @@ eps_global = 0.01
 w_global = 10
 k_global = 20
 def eTiOT(X1, X2):
-    return TiOT_lib.eTiOT(X1,X2, eps=eps_global)[0]
-
-def fast_eTiOT(X1, X2):
-    return TiOT_lib.eTiOT(X1,X2, eps=eps_global, w_update_freq=k_global)[0]
+    return TiOT_lib.eTiOT(X1,X2, eps=eps_global, freq=k_global)[0]
 
 def eTAOT(X1, X2):
     return TiOT_lib.eTAOT(X1,X2, eps = eps_global)[0]
@@ -64,8 +61,7 @@ def kNN(dataset_name, data, metric_name , eps , w ):
         metric = 'euclidean'
     elif metric_name == 'eTAOT':
         metric = eTAOT
-    elif metric_name == f'eTiOT(k = {k_global})':
-        metric = fast_eTiOT
+
     X_train, Y_train, X_test, Y_test = data[0], data[1], data[2], data[3]
     knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
     knn.fit(X_train, Y_train)
@@ -113,11 +109,10 @@ def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
     if RUN :
         data = process_data(dataset_name= dataset_name)
         w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
-        alg_names = ["eTiOT", f"eTiOT(k = {k_global})"]  +  [f"eTAOT(w = {w})" for w in w_list]
+        alg_names = ["eTiOT"]  +  [f"eTAOT(w = {w})" for w in w_list]
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
         for eps in eps_list:
             results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = w_TAOT))
-            results[f'eTiOT(k = {k_global})'].append(kNN(dataset_name, data, metric_name=f'eTiOT(k = {k_global})', eps = eps, w = w_TAOT))
             for w in w_list:
                 results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
 
