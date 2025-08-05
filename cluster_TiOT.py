@@ -61,28 +61,6 @@ def compute_distance(args):
     return (i, j, metric(Xi, Xj))
 
 def compute_distance_matrix(X, metric):
-    # n = len(X)
-    # distance_matrix = np.zeros((n,n))
-    # for i in range(n):
-    #     for j in range(i+1, n):
-    #         distance_matrix[i,j] = metric(X[i], X[j])
-    #     print(f"Done {i}/{n}")
-    # distance_matrix = distance_matrix + distance_matrix.T
-    # return distance_matrix
-    plt.figure(figsize=(10, 6))
-
-    plt.plot(X[0], label='X[0]')
-    plt.plot(X[1], label='X[1]')
-    plt.plot(X[17], label='X[17]')
-
-    plt.xlabel('Index')
-    plt.ylabel('Value')
-    plt.title('Line Plot of X[0], X[1], and X[17]')
-    plt.legend()
-    plt.grid(True)
-
-    plt.savefig('three_lines_plot.png', dpi=300, bbox_inches='tight')
-    plt.show()
     n = len(X)
     total_pairs = (n * (n - 1)) // 2  # number of unique i < j pairs
     pairs_gen = [(i, j, X[i], X[j], metric) for i, j in combinations(range(n), 2)]  # generator
@@ -113,21 +91,11 @@ def cluster(dataset_name, data, metric_name , eps , w ):
     X = data[0]
     y = data[1]
     distance_matrix = compute_distance_matrix(X, metric)
-    plt.figure(figsize=(18, 18))
-    sns.heatmap(distance_matrix, cmap='viridis', annot=True, fmt=".2f", square=True)
-    # Optional: add labels or title
-    plt.title('Distance Matrix Heatmap')
-    plt.xlabel('Index')
-    plt.ylabel('Index')
-
-    # Save the figure
-    plt.savefig(f'distance_heatmap_{metric_name}.png', dpi=300, bbox_inches='tight')
-    plt.close()
     print('number of cluseter ', len(set(y)))
     agglo = AgglomerativeClustering(
     n_clusters=len(set(y)),
     metric='precomputed',  # For older versions < 1.2
-    linkage='average'        # Only 'average' or 'complete' are valid with precomputed distances
+    linkage='complete'        # Only 'average' or 'complete' are valid with precomputed distances
     )
     y_pred = agglo.fit_predict(distance_matrix)
     accuracy = rand_score(y, y_pred)
@@ -138,18 +106,6 @@ def cluster(dataset_name, data, metric_name , eps , w ):
     return error
 
 def cluster_kMean(dataset_name, data, metric_name , eps , w ):
-    global w_global, eps_global
-    w_global = w
-    eps_global = eps
-    if metric_name == "oriTAOT":
-        metric = oriTAOT
-    elif metric_name == "eTiOT":
-        metric = eTiOT
-    elif metric_name == 'euclidean':
-        metric = euclidean
-    elif metric_name == 'eTAOT':
-        metric = eTAOT
-
     X = data[0]
     y = data[1]
     print('number of cluseter ', len(set(y)))
@@ -192,7 +148,7 @@ def read_result(result_file):
     return results
 
 def experiment_cluster(dataset_name, w_TAOT, RUN = True):
-    eps_list = [0.1]
+    eps_list = [0.01, 0.04, 0.07, 0.1]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
     plot_file = os.path.join("KMeans_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
     result_file = os.path.join("KMeans_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
@@ -216,9 +172,9 @@ def experiment_cluster(dataset_name, w_TAOT, RUN = True):
         plot_results(results, plot_file)
  
 if __name__ == "__main__":
+    # experiment_cluster("SonyAIBORobotSurface1", 2)
     # experiment_cluster("CBF", 1)
-    # experiment_cluster("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_cluster("SonyAIBORobotSurface1", 2)
+    experiment_cluster("DistalPhalanxOutlineAgeGroup", 1)
     # experiment_cluster("ProximalPhalanxTW", 0.7)
     # experiment_cluster('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_cluster('ProximalPhalanxOutlineAgeGroup', 0.1)
