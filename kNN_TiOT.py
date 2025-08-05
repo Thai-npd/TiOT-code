@@ -101,7 +101,7 @@ def read_result(result_file):
     results = df.to_dict(orient='list')
     return results
 
-def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
+def experiment_kNN(dataset_name, w_TAOT, RUN = True):
     eps_list = [0.01*i for i in range(1,11)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
     plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
@@ -123,35 +123,35 @@ def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
         plot_results(results, plot_file)
  
 if __name__ == "__main__":
-    # experiment_kNNgraph("CBF", 1, RUN=False)
-    # experiment_kNNgraph("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_kNNgraph("SonyAIBORobotSurface1", 2)
-    # experiment_kNNgraph("ProximalPhalanxTW", 0.7)
-    # experiment_kNNgraph('ProximalPhalanxOutlineCorrect', 0.7)
-    # experiment_kNNgraph('ProximalPhalanxOutlineAgeGroup', 0.1)
-    # experiment_kNNgraph('MiddlePhalanxOutlineCorrect', 0.5)
+    experiment_kNN("SonyAIBORobotSurface1", 2)
+    # experiment_kNN("CBF", 1)
+    # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
+    # experiment_kNN("ProximalPhalanxTW", 0.7)
+    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
+    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
+    #experiment_kNN('Adiac',0.1)
+    #experiment_kNN('SwedishLeaf',0.9)
 
-    #experiment_kNNgraph('Adiac',0.1)
-    #experiment_kNNgraph("ECG200", 3)
-    #experiment_kNNgraph('SwedishLeaf',0.9)
-    #experiment_kNNgraph('SyntheticControl', 4)
-    #experiment_kNNgraph('Chinatown', 1)
-    #experiment_kNNgraph('ItalyPowerDemand', 7)
-    #experiment_kNNgraph('MoteStrain', 1)
-    #experiment_kNNgraph('ECGFiveDays', 5)
+    # experiment_kNN('ProximalPhalanxOutlineAgeGroup', 0.1)
+    #experiment_kNN("ECG200", 3)
+    #experiment_kNN('SyntheticControl', 4)
+    #experiment_kNN('Chinatown', 1)
+    #experiment_kNN('ItalyPowerDemand', 7)
+    #experiment_kNN('MoteStrain', 1)
+    #experiment_kNN('ECGFiveDays', 5)
 
 
-    # experiment_kNNgraph('TwoLeadECG', 0.1)
-    # experiment_kNNgraph('MedicalImages', 4)
-    # experiment_kNNgraph('ArrowHead', 3)
-    # experiment_kNNgraph('ToeSegmentation2', 0.8)
-    # experiment_kNNgraph('ToeSegmentation1', 0.1)
-    # experiment_kNNgraph('Meat', 0.9)
-    # experiment_kNNgraph('ShapeletSim', 2)
-    # experiment_kNNgraph('DiatomSizeReduction', 0.2)
-    # experiment_kNNgraph('Ham', 0.7) unreasonable long running time
-    # experiment_kNNgraph('Wine', 9)
-    # experiment_kNNgraph('Car', 0.8)
-    # experiment_kNNgraph('Beef', 6)
-    # experiment_kNNgraph('Symbols', 0.8)
-    # experiment_kNNgraph('Strawberry', 0.2)
+    # experiment_kNN('TwoLeadECG', 0.1)
+    # experiment_kNN('MedicalImages', 4)
+    # experiment_kNN('ArrowHead', 3)
+    # experiment_kNN('ToeSegmentation2', 0.8)
+    # experiment_kNN('ToeSegmentation1', 0.1)
+    # experiment_kNN('Meat', 0.9)
+    # experiment_kNN('ShapeletSim', 2)
+    # experiment_kNN('DiatomSizeReduction', 0.2)
+    # experiment_kNN('Ham', 0.7) unreasonable long running time
+    # experiment_kNN('Wine', 9)
+    # experiment_kNN('Car', 0.8)
+    # experiment_kNN('Beef', 6)
+    # experiment_kNN('Symbols', 0.8)
+    # experiment_kNN('Strawberry', 0.2)

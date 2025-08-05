@@ -24,11 +24,8 @@ k_global = 20
 def eTiOT(X1, X2):
     return TiOT_lib.eTiOT(X1,X2, eps=eps_global)[0]
 
-def fast_eTiOT(X1, X2):
-    return TiOT_lib.eTiOT(X1,X2, eps=eps_global, w_update_freq=k_global)[0]
-
 def eTAOT(X1, X2):
-    return TiOT_lib.eTAOT(X1,X2, eps = eps_global)[0]
+    return TiOT_lib.eTAOT(X1,X2, eps = eps_global, freq = k_global)[0]
 
 def oriTAOT(X1, X2):
     return TiOT_lib.eTAOT(X1,X2, w = w_global, eps = eps_global, costmatrix=TiOT_lib.costmatrix0)[0]
@@ -72,7 +69,20 @@ def compute_distance_matrix(X, metric):
     #     print(f"Done {i}/{n}")
     # distance_matrix = distance_matrix + distance_matrix.T
     # return distance_matrix
+    plt.figure(figsize=(10, 6))
 
+    plt.plot(X[0], label='X[0]')
+    plt.plot(X[1], label='X[1]')
+    plt.plot(X[17], label='X[17]')
+
+    plt.xlabel('Index')
+    plt.ylabel('Value')
+    plt.title('Line Plot of X[0], X[1], and X[17]')
+    plt.legend()
+    plt.grid(True)
+
+    plt.savefig('three_lines_plot.png', dpi=300, bbox_inches='tight')
+    plt.show()
     n = len(X)
     total_pairs = (n * (n - 1)) // 2  # number of unique i < j pairs
     pairs_gen = [(i, j, X[i], X[j], metric) for i, j in combinations(range(n), 2)]  # generator
@@ -80,13 +90,14 @@ def compute_distance_matrix(X, metric):
     D = np.zeros((n, n))
     # for a in Pool(5).imap(compute_pair, pairs_gen):
     #     print(a)
+    print(pairs_gen[:0])
     with multiprocessing.Pool(100) as pool:
         for i, j, d in tqdm(pool.imap(compute_distance, pairs_gen), total=total_pairs):
             D[i, j] = D[j, i] = d
 
     return D
 
-def kNN(dataset_name, data, metric_name , eps , w ):
+def cluster(dataset_name, data, metric_name , eps , w ):
     global w_global, eps_global
     w_global = w
     eps_global = eps
@@ -98,11 +109,20 @@ def kNN(dataset_name, data, metric_name , eps , w ):
         metric = euclidean
     elif metric_name == 'eTAOT':
         metric = eTAOT
-    elif metric_name == f'eTiOT(k = {k_global})':
-        metric = fast_eTiOT
+
     X = data[0]
     y = data[1]
     distance_matrix = compute_distance_matrix(X, metric)
+    plt.figure(figsize=(18, 18))
+    sns.heatmap(distance_matrix, cmap='viridis', annot=True, fmt=".2f", square=True)
+    # Optional: add labels or title
+    plt.title('Distance Matrix Heatmap')
+    plt.xlabel('Index')
+    plt.ylabel('Index')
+
+    # Save the figure
+    plt.savefig(f'distance_heatmap_{metric_name}.png', dpi=300, bbox_inches='tight')
+    plt.close()
     print('number of cluseter ', len(set(y)))
     agglo = AgglomerativeClustering(
     n_clusters=len(set(y)),
@@ -117,6 +137,31 @@ def kNN(dataset_name, data, metric_name , eps , w ):
     print(f"  ====>  Completed dataset: {dataset_name}, Metric : {metric_name}, Error:",error)
     return error
 
+def cluster_kMean(dataset_name, data, metric_name , eps , w ):
+    global w_global, eps_global
+    w_global = w
+    eps_global = eps
+    if metric_name == "oriTAOT":
+        metric = oriTAOT
+    elif metric_name == "eTiOT":
+        metric = eTiOT
+    elif metric_name == 'euclidean':
+        metric = euclidean
+    elif metric_name == 'eTAOT':
+        metric = eTAOT
+
+    X = data[0]
+    y = data[1]
+    print('number of cluseter ', len(set(y)))
+    kmeans = KMeans(n_clusters=len(set(y)), random_state=0)
+    y_pred = kmeans.fit_predict(X)
+    accuracy = rand_score(y, y_pred)
+    error = 1 - accuracy
+    # print(f"================> Predictions: {y_pred}\n\n")
+    # print(f"================> True labels: {y}\n\n")
+    print(f"  ====>  Completed dataset: {dataset_name} via kMeans, Error:",error)
+    return error    
+
 def plot_results(results, plot_file):
     eps_list = results['eps']
     alg_names = [k for k in results.keys() if k != 'eps']
@@ -125,9 +170,10 @@ def plot_results(results, plot_file):
     markers = ['o', 's', '^', 'D', 'v', 'P', 'X']
     linestyles = ['-', '--', '-', '-', '-', '-', '-']
     i = 0
-    for name in alg_names:
-        plt.plot(eps_list, np.array(results[name]), label = name, linewidth=1.75, marker=markers[i], linestyle = linestyles[i])
-        i+=1
+    for name in alg_names: 
+        if name != 'euclid' and name != 'kMeans':
+            plt.plot(eps_list, results[name], label = name, linewidth=1.75, marker=markers[i], linestyle = linestyles[i])
+            i+=1
     plt.xlabel(r"$\varepsilon$", fontsize = 14)
     plt.ylabel("Error", fontsize = 14)
     plt.legend()
@@ -145,60 +191,60 @@ def read_result(result_file):
     results = df.to_dict(orient='list')
     return results
 
-def experiment_kNNgraph(dataset_name, w_TAOT, RUN = True):
+def experiment_cluster(dataset_name, w_TAOT, RUN = True):
     eps_list = [0.1]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
     plot_file = os.path.join("KMeans_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
     result_file = os.path.join("KMeans_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
     if RUN :
         data = process_data(dataset_name= dataset_name)
-        #kNN(dataset_name, data, metric_name='oriTAOT', eps =0.1, w = 2)
+        #cluster(dataset_name, data, metric_name='oriTAOT', eps =0.1, w = 2)
         w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
-        alg_names = ["eTiOT", f"eTiOT(k = {k_global})"]  +  [f"eTAOT(w = {w})" for w in w_list] + ['euclid']
+        alg_names = ["eTiOT"]  +  [f"eTAOT(w = {w})" for w in w_list] + ['euclid', 'kMeans']
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
+        results['euclid']= cluster(dataset_name, data, metric_name='euclidean', eps = None, w = w_TAOT)
+        results['kMeans'] = cluster_kMean(dataset_name, data, metric_name='euclidean', eps = None, w = w_TAOT)
         for eps in eps_list:
-            #results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = w_TAOT))
-            results['euclid'].append(kNN(dataset_name, data, metric_name='euclidean', eps = eps, w = w_TAOT))
-            results[f'eTiOT(k = {k_global})'].append(kNN(dataset_name, data, metric_name=f'eTiOT(k = {k_global})', eps = eps, w = w_TAOT))
+            #results['eTiOT'].append(cluster(dataset_name, data, metric_name='eTiOT', eps = eps, w = w_TAOT))
+            results['eTiOT'].append(cluster(dataset_name, data, metric_name='eTiOT', eps = eps, w = w_TAOT))
             for w in w_list:
-                results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
-        #save_result(results, result_file)
-        #plot_results(results, plot_file)
+                results[f"eTAOT(w = {w})"].append(cluster(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
+        save_result(results, result_file)
+        plot_results(results, plot_file)
     else:
-        #results = read_result(result_file)
-        #plot_results(results, plot_file)
-        print()
+        results = read_result(result_file)
+        plot_results(results, plot_file)
  
 if __name__ == "__main__":
-    # experiment_kNNgraph("CBF", 1)
-    # experiment_kNNgraph("DistalPhalanxOutlineAgeGroup", 1)
-    # experiment_kNNgraph("SonyAIBORobotSurface1", 2)
-    # experiment_kNNgraph("ProximalPhalanxTW", 0.7)
-    # experiment_kNNgraph('ProximalPhalanxOutlineCorrect', 0.7)
-    # experiment_kNNgraph('ProximalPhalanxOutlineAgeGroup', 0.1)
-    # experiment_kNNgraph('MiddlePhalanxOutlineCorrect', 0.5)
+    # experiment_cluster("CBF", 1)
+    # experiment_cluster("DistalPhalanxOutlineAgeGroup", 1)
+    experiment_cluster("SonyAIBORobotSurface1", 2)
+    # experiment_cluster("ProximalPhalanxTW", 0.7)
+    # experiment_cluster('ProximalPhalanxOutlineCorrect', 0.7)
+    # experiment_cluster('ProximalPhalanxOutlineAgeGroup', 0.1)
+    # experiment_cluster('MiddlePhalanxOutlineCorrect', 0.5)
 
-    # experiment_kNNgraph('Adiac',0.1)
-    experiment_kNNgraph("ECG200", 3)
-    #experiment_kNNgraph('SwedishLeaf',0.9)
-    #experiment_kNNgraph('SyntheticControl', 4)
-    #experiment_kNNgraph('Chinatown', 1)
-    #experiment_kNNgraph('ItalyPowerDemand', 7)
-    #experiment_kNNgraph('MoteStrain', 1)
-    #experiment_kNNgraph('ECGFiveDays', 5)
+    # experiment_cluster('Adiac',0.1)
+    # experiment_cluster("ECG200", 3)
+    #experiment_cluster('SwedishLeaf',0.9)
+    #experiment_cluster('SyntheticControl', 4)
+    #experiment_cluster('Chinatown', 1)
+    #experiment_cluster('ItalyPowerDemand', 7)
+    #experiment_cluster('MoteStrain', 1)
+    #experiment_cluster('ECGFiveDays', 5)
 
 
-    # experiment_kNNgraph('TwoLeadECG', 0.1)
-    # experiment_kNNgraph('MedicalImages', 4)
-    # experiment_kNNgraph('ArrowHead', 3)
-    # experiment_kNNgraph('ToeSegmentation2', 0.8)
-    # experiment_kNNgraph('ToeSegmentation1', 0.1)
-    # experiment_kNNgraph('Meat', 0.9)
-    # experiment_kNNgraph('ShapeletSim', 2)
-    # experiment_kNNgraph('DiatomSizeReduction', 0.2)
-    # experiment_kNNgraph('Ham', 0.7) unreasonable long running time
-    # experiment_kNNgraph('Wine', 9)
-    # experiment_kNNgraph('Car', 0.8)
-    # experiment_kNNgraph('Beef', 6)
-    # experiment_kNNgraph('Symbols', 0.8)
-    # experiment_kNNgraph('Strawberry', 0.2)
+    # experiment_cluster('TwoLeadECG', 0.1)
+    # experiment_cluster('MedicalImages', 4)
+    # experiment_cluster('ArrowHead', 3)
+    # experiment_cluster('ToeSegmentation2', 0.8)
+    # experiment_cluster('ToeSegmentation1', 0.1)
+    # experiment_cluster('Meat', 0.9)
+    # experiment_cluster('ShapeletSim', 2)
+    # experiment_cluster('DiatomSizeReduction', 0.2)
+    # experiment_cluster('Ham', 0.7) unreasonable long running time
+    # experiment_cluster('Wine', 9)
+    # experiment_cluster('Car', 0.8)
+    # experiment_cluster('Beef', 6)
+    # experiment_cluster('Symbols', 0.8)
+    # experiment_cluster('Strawberry', 0.2)

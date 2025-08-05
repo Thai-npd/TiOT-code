@@ -173,7 +173,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
         K = np.exp(-C/eps)
         return w, K
     
-    def PGD(g,h, w, subprob_tol = 10**-7, maxIter = 100, eta = 10**-2):
+    def PGD(g,h, w, subprob_tol = 10**-7, maxIter = 1, eta = 10**-2):
         def f(w):
             C = w*value_diff + (1-w)*time_diff
             K = np.exp(-C/eps)
