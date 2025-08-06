@@ -174,17 +174,18 @@ def experiment_cluster(dataset_name, w_TAOT, RUN = True):
 if __name__ == "__main__":
     # experiment_cluster("SonyAIBORobotSurface1", 2)
     # experiment_cluster("CBF", 1)
-    experiment_cluster("DistalPhalanxOutlineAgeGroup", 1)
+    # experiment_cluster("DistalPhalanxOutlineAgeGroup", 1)
     # experiment_cluster("ProximalPhalanxTW", 0.7)
     # experiment_cluster('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_cluster('ProximalPhalanxOutlineAgeGroup', 0.1)
     # experiment_cluster('MiddlePhalanxOutlineCorrect', 0.5)
 
-    # experiment_cluster('Adiac',0.1)
+    experiment_cluster('Adiac',0.1)
+    experiment_cluster('SwedishLeaf',0.9)
+    experiment_cluster('Chinatown', 1)
+    
     # experiment_cluster("ECG200", 3)
-    #experiment_cluster('SwedishLeaf',0.9)
     #experiment_cluster('SyntheticControl', 4)
-    #experiment_cluster('Chinatown', 1)
     #experiment_cluster('ItalyPowerDemand', 7)
     #experiment_cluster('MoteStrain', 1)
     #experiment_cluster('ECGFiveDays', 5)

@@ -124,22 +124,26 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True):
  
 if __name__ == "__main__":
     # ===> Tier 1 
-    
+
     # experiment_kNN("SonyAIBORobotSurface1", 2)
     # experiment_kNN("CBF", 1)
-    experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_kNN("ProximalPhalanxTW", 0.7)
-    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
-    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
-    #experiment_kNN('Adiac',0.1)
+    # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
+    # experiment_kNN("ProximalPhalanxTW", 0.7)
+    experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
+    experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
+    experiment_kNN('Adiac',0.1)
     #experiment_kNN('SwedishLeaf',0.9)
 
+    # ==> Sensor data
+    
+    # experiment_kNN('Car', 0.8)
+    #experiment_kNN('MoteStrain', 1)
+    
     # experiment_kNN('ProximalPhalanxOutlineAgeGroup', 0.1)
     #experiment_kNN("ECG200", 3)
     #experiment_kNN('SyntheticControl', 4)
     #experiment_kNN('Chinatown', 1)
     #experiment_kNN('ItalyPowerDemand', 7)
-    #experiment_kNN('MoteStrain', 1)
     #experiment_kNN('ECGFiveDays', 5)
 
 
@@ -153,7 +157,6 @@ if __name__ == "__main__":
     # experiment_kNN('DiatomSizeReduction', 0.2)
     # experiment_kNN('Ham', 0.7) unreasonable long running time
     # experiment_kNN('Wine', 9)
-    # experiment_kNN('Car', 0.8)
     # experiment_kNN('Beef', 6)
     # experiment_kNN('Symbols', 0.8)
     # experiment_kNN('Strawberry', 0.2)
