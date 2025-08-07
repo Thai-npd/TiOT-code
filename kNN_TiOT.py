@@ -134,8 +134,17 @@ if __name__ == "__main__":
     experiment_kNN('Adiac',0.1)
     #experiment_kNN('SwedishLeaf',0.9)
 
-    # ==> Sensor data
-    
+    # ==> New data
+    experiment_kNN('Lightning7', 0.9)
+    # experiment_kNN('Coffee', 2 )
+    # experiment_kNN('Plane', 0.5)
+    # experiment_kNN('BeetleFly', 0.3)
+    # experiment_kNN('Herring', 0.2)
+    # experiment_kNN('BirdChicken', 0.1)
+    # experiment_kNN('Earthquakes')
+
+
+
     # experiment_kNN('Car', 0.8)
     #experiment_kNN('MoteStrain', 1)
     
