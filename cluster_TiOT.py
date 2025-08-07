@@ -69,7 +69,7 @@ def compute_distance_matrix(X, metric):
     # for a in Pool(5).imap(compute_pair, pairs_gen):
     #     print(a)
     print(pairs_gen[:0])
-    with multiprocessing.Pool(100) as pool:
+    with multiprocessing.Pool(32) as pool:
         for i, j, d in tqdm(pool.imap(compute_distance, pairs_gen), total=total_pairs):
             D[i, j] = D[j, i] = d
 
