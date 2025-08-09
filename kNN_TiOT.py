@@ -103,6 +103,7 @@ def read_result(result_file):
 
 def experiment_kNN(dataset_name, w_TAOT, RUN = True):
     eps_list = [0.01*i for i in range(1,11)]
+    eps_list = [0.01*i for i in range(5,11)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
     plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
     result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
@@ -129,19 +130,20 @@ if __name__ == "__main__":
     # experiment_kNN("CBF", 1)
     # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
     # experiment_kNN("ProximalPhalanxTW", 0.7)
-    experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
-    experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
-    experiment_kNN('Adiac',0.1)
-    #experiment_kNN('SwedishLeaf',0.9)
+    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
+    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
+    
+    # experiment_kNN('Adiac',0.1) --> need to re-run
+    #experiment_kNN('SwedishLeaf',0.9) --> need to re-run
 
     # ==> New data
-    experiment_kNN('Lightning7', 0.9)
     # experiment_kNN('Coffee', 2 )
     # experiment_kNN('Plane', 0.5)
     # experiment_kNN('BeetleFly', 0.3)
     # experiment_kNN('Herring', 0.2)
     # experiment_kNN('BirdChicken', 0.1)
-    # experiment_kNN('Earthquakes')
+    experiment_kNN('Earthquakes', 7)
+    # experiment_kNN('Lightning7', 0.9)
 
 
 
