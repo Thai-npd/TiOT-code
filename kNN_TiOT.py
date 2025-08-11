@@ -21,7 +21,7 @@ def eTiOT(X1, X2):
     return TiOT_lib.eTiOT(X1,X2, eps=eps_global, freq=k_global)[0]
 
 def eTAOT(X1, X2):
-    return TiOT_lib.eTAOT(X1,X2, eps = eps_global)[0]
+    return TiOT_lib.eTAOT(X1,X2, w = w_global, eps = eps_global)[0]
 
 def oriTAOT(X1, X2):
     return TiOT_lib.eTAOT(X1,X2, w = w_global, eps = eps_global, costmatrix=TiOT_lib.costmatrix0)[0]
@@ -47,7 +47,28 @@ def process_data(dataset_name ):
 
     Y_test = [row[0] for row in data_test]
     X_test = [row[1:] for row in data_test]
+
     return [X_train, Y_train, X_test, Y_test]
+
+def get_w_opt(X_train, Y_train, eps):
+    np.random.seed(0)
+    unique_labels = np.unique(Y_train)
+    label_1, label_2 = unique_labels[0], unique_labels[1]
+
+    dist_min = np.inf
+    w_opt = 0
+    label_1_index = np.where(Y_train == label_1)[0]
+    label_2_index = np.where(Y_train == label_2)[0]
+    n_pairs = min(len(label_1_index), len(label_2_index))
+    for _ in range(n_pairs):
+        idx1 = np.random.choice(label_1_index)
+        idx2 = np.random.choice(label_2_index)
+        distance, plan, w = TiOT_lib.eTiOT(X_train[idx1], X_train[idx2], eps=eps, freq=k_global)
+        if dist_min > distance:
+            dist_min = distance
+            w_opt = w
+    print(f"===> w_opt = {w_opt}")
+    return w_opt
 
 def kNN(dataset_name, data, metric_name , eps , w ):
     global w_global, eps_global
@@ -65,7 +86,7 @@ def kNN(dataset_name, data, metric_name , eps , w ):
     X_train, Y_train, X_test, Y_test = data[0], data[1], data[2], data[3]
     knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
     knn.fit(X_train, Y_train)
-    with multiprocessing.Pool(32) as pool:
+    with multiprocessing.Pool(64) as pool:
         y_pred = list(tqdm(pool.imap(knn.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
     pool.close()
     accuracy = accuracy_score(Y_test, y_pred)
@@ -103,17 +124,19 @@ def read_result(result_file):
 
 def experiment_kNN(dataset_name, w_TAOT, RUN = True):
     eps_list = [0.01*i for i in range(1,11)]
-    eps_list = [0.01*i for i in range(5,11)]
+    eps_list = [0.01*i for i in range(7,11)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
-    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
-    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
+    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + "__test" + ".pdf")
+    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + "__test" + '.csv')
     if RUN :
         data = process_data(dataset_name= dataset_name)
         w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
-        alg_names = ["eTiOT"]  +  [f"eTAOT(w = {w})" for w in w_list]
+        alg_names = ["eTiOT", 'eTAOT']  +  [f"eTAOT(w = {w})" for w in w_list]
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
+        w_opt = get_w_opt(data[0], data[1], eps=0.01)
         for eps in eps_list:
-            results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = w_TAOT))
+            results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = None))
+            results[f"eTAOT"].append(kNN(dataset_name, data, metric_name='eTAOT', eps = eps, w = w_opt))
             for w in w_list:
                 results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
 
@@ -142,7 +165,7 @@ if __name__ == "__main__":
     # experiment_kNN('BeetleFly', 0.3)
     # experiment_kNN('Herring', 0.2)
     # experiment_kNN('BirdChicken', 0.1)
-    experiment_kNN('Earthquakes', 7)
+    # experiment_kNN('Earthquakes', 7)
     # experiment_kNN('Lightning7', 0.9)
 
 
@@ -151,18 +174,19 @@ if __name__ == "__main__":
     #experiment_kNN('MoteStrain', 1)
     
     # experiment_kNN('ProximalPhalanxOutlineAgeGroup', 0.1)
-    #experiment_kNN("ECG200", 3)
-    #experiment_kNN('SyntheticControl', 4)
-    #experiment_kNN('Chinatown', 1)
-    #experiment_kNN('ItalyPowerDemand', 7)
-    #experiment_kNN('ECGFiveDays', 5)
-
-
+    # experiment_kNN("ECG200", 3)
+    # experiment_kNN('ECGFiveDays', 5)
     # experiment_kNN('TwoLeadECG', 0.1)
+    
+    #experiment_kNN('SyntheticControl', 4)
+    experiment_kNN('Chinatown', 1)
+    experiment_kNN('ItalyPowerDemand', 7)
+
+
     # experiment_kNN('MedicalImages', 4)
     # experiment_kNN('ArrowHead', 3)
-    # experiment_kNN('ToeSegmentation2', 0.8)
-    # experiment_kNN('ToeSegmentation1', 0.1)
+    experiment_kNN('ToeSegmentation2', 0.8)
+    experiment_kNN('ToeSegmentation1', 0.1)
     # experiment_kNN('Meat', 0.9)
     # experiment_kNN('ShapeletSim', 2)
     # experiment_kNN('DiatomSizeReduction', 0.2)
