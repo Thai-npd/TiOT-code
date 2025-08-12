@@ -99,8 +99,8 @@ def plot_results(results, plot_file):
     alg_names = [k for k in results.keys() if k != 'eps']
     sns.set(style="whitegrid", context="paper")
     plt.figure(figsize=(8, 5))
-    markers = ['o', 's', '^', 'D', 'v', 'P', 'X']
-    linestyles = ['-', '--', '-', '-', '-', '-', '-']
+    markers = ['s', 'o', 'D', '^', 'v', 'P', 'X']
+    linestyles = ['-', '-', "-", '--', "-.", '-', '-', '-']
     i = 0
     for name in alg_names:
         plt.plot(eps_list, np.array(results[name]), label = name, linewidth=1.75, marker=markers[i], linestyle = linestyles[i])
@@ -123,10 +123,10 @@ def read_result(result_file):
     return results
 
 def experiment_kNN(dataset_name, w_TAOT, RUN = True):
-    eps_list = [0.01*i for i in range(1,11)]
+    eps_list = [0.01*i for i in range(1,7)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
-    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + "__test" + ".pdf")
-    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + "__test" + '.csv')
+    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
+    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
     if RUN :
         data = process_data(dataset_name= dataset_name)
         w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
@@ -135,27 +135,26 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True):
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
         w_opt = get_w_opt(data[0], data[1], eps=0.01)
         for eps in eps_list:
-            #results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = None))
+            results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = None))
             results["eTAOT(w = w*)"].append(kNN(dataset_name, data, metric_name='eTAOT', eps = eps, w = w_opt))
-            #for w in w_list:
-            #    results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
+            for w in w_list:
+                results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
 
         save_result(results, result_file)
         plot_results(results, plot_file)
     else:
         results = read_result(result_file)
-        save_result(results, result_file)
         plot_results(results, plot_file)
  
 if __name__ == "__main__":
     # ===> Tier 1 
 
-    experiment_kNN("SonyAIBORobotSurface1", 2)
-    experiment_kNN("CBF", 1)
-    experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_kNN("ProximalPhalanxTW", 0.7)
-    experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
-    experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
+    # experiment_kNN("SonyAIBORobotSurface1", 2)
+    # experiment_kNN("CBF", 1)
+    # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
+    # experiment_kNN("ProximalPhalanxTW", 0.7)
+    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
+    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
     
     # experiment_kNN('Adiac',0.1) --> need to re-run
     #experiment_kNN('SwedishLeaf',0.9) --> need to re-run
@@ -176,7 +175,7 @@ if __name__ == "__main__":
     
     # experiment_kNN('ProximalPhalanxOutlineAgeGroup', 0.1)
     # experiment_kNN("ECG200", 3)
-    # experiment_kNN('ECGFiveDays', 5)
+    experiment_kNN('ECGFiveDays', 5)
     # experiment_kNN('TwoLeadECG', 0.1)
     
     #experiment_kNN('SyntheticControl', 4)
@@ -186,7 +185,7 @@ if __name__ == "__main__":
 
     # experiment_kNN('MedicalImages', 4)
     # experiment_kNN('ArrowHead', 3)
-    # experiment_kNN('ToeSegmentation2', 0.8)
+    experiment_kNN('ToeSegmentation2', 0.8)
     # experiment_kNN('ToeSegmentation1', 0.1)
     # experiment_kNN('Meat', 0.9)
     # experiment_kNN('ShapeletSim', 2)
