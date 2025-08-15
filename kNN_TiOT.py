@@ -131,7 +131,6 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True):
         data = process_data(dataset_name= dataset_name)
         w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
         alg_names = ["eTiOT", 'eTAOT(w = w*)']  +  [f"eTAOT(w = {w})" for w in w_list]
-        alg_names = ['eTAOT(w = w*)']
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
         w_opt = get_w_opt(data[0], data[1], eps=0.01)
         for eps in eps_list:
