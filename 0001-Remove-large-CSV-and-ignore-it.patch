@@ -1,0 +1,21 @@
+From 9ca85219ace74c2b56596ae810ffb05de1fbf80b Mon Sep 17 00:00:00 2001
+From: Thai-pdn <thai.pdn@gmail.com>
+Date: Thu, 21 Aug 2025 09:42:58 +0700
+Subject: [PATCH] Remove large CSV and ignore it
+
+---
+ .gitignore | 2 ++
+ 1 file changed, 2 insertions(+)
+ create mode 100644 .gitignore
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..4093c0d
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,2 @@
++
++city_temperature.csv
+-- 
+2.37.3.windows.1
+
