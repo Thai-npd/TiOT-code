@@ -1,6 +1,7 @@
 import numpy as np
 import ot
 from scipy.optimize import linprog
+np.seterr(divide='ignore', invalid='ignore', over='ignore')
 
 def normalization(x,y):
     """

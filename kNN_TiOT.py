@@ -50,20 +50,31 @@ def process_data(dataset_name ):
 
     return [X_train, Y_train, X_test, Y_test]
 
-def get_w_opt(X_train, Y_train, eps):
+def get_w_opt(X_train, Y_train):
     np.random.seed(0)
-    unique_labels = np.unique(Y_train)
-    label_1, label_2 = unique_labels[0], unique_labels[1]
+    # unique_labels = np.unique(Y_train)
+    # label_1, label_2 = unique_labels[0], unique_labels[1]
+
+    # dist_min = np.inf
+    # w_opt = 0
+    # label_1_index = np.where(Y_train == label_1)[0]
+    # label_2_index = np.where(Y_train == label_2)[0]
+    # n_pairs = min(len(label_1_index), len(label_2_index))
+    # for _ in range(n_pairs):
+    #     idx1 = np.random.choice(label_1_index)
+    #     idx2 = np.random.choice(label_2_index)
+    #     distance, plan, w = TiOT_lib.eTiOT(X_train[idx1], X_train[idx2], eps=eps, freq=k_global)
+    #     if dist_min > distance:
+    #         dist_min = distance
+    #         w_opt = w
+    # print(f"===> w_opt = {w_opt}")
 
     dist_min = np.inf
     w_opt = 0
-    label_1_index = np.where(Y_train == label_1)[0]
-    label_2_index = np.where(Y_train == label_2)[0]
-    n_pairs = min(len(label_1_index), len(label_2_index))
-    for _ in range(n_pairs):
-        idx1 = np.random.choice(label_1_index)
-        idx2 = np.random.choice(label_2_index)
-        distance, plan, w = TiOT_lib.eTiOT(X_train[idx1], X_train[idx2], eps=eps, freq=k_global)
+    all_pairs = [(i, j) for i in range(len(Y_train)) for j in range(len(Y_train)) if i < j and Y_train[i] != Y_train[j]]
+    selected_pairs = [all_pairs[idx] for idx in np.random.choice(len(all_pairs), size=len(Y_train), replace=False)]
+    for idx1, idx2 in selected_pairs:
+        distance, plan, w = TiOT_lib.eTiOT(X_train[idx1], X_train[idx2], eps=0.01, freq=5)
         if dist_min > distance:
             dist_min = distance
             w_opt = w
@@ -123,19 +134,20 @@ def read_result(result_file):
     return results
 
 def experiment_kNN(dataset_name, w_TAOT, RUN = True):
-    eps_list = [0.01*i for i in range(1,7)]
+    eps_list = [0.01*i for i in range(1,11)]
+    #eps_list = [0.02*i for i in range(2,6)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
     plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
     result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
     if RUN :
-        data = process_data(dataset_name= dataset_name)
+        data = process_data(dataset_name = dataset_name)
         w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
-        alg_names = ["eTiOT", 'eTAOT(w = w*)']  +  [f"eTAOT(w = {w})" for w in w_list]
+        alg_names = ["eTiOT"]  +  [f"eTAOT(w = {w})" for w in w_list]
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
-        w_opt = get_w_opt(data[0], data[1], eps=0.01)
+        #w_opt = get_w_opt(data[0], data[1])
         for eps in eps_list:
             results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = None))
-            results["eTAOT(w = w*)"].append(kNN(dataset_name, data, metric_name='eTAOT', eps = eps, w = w_opt))
+            #results["eTAOT(w = w*)"].append(kNN(dataset_name, data, metric_name='eTAOT', eps = eps, w = w_opt))
             for w in w_list:
                 results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
 
@@ -170,21 +182,24 @@ if __name__ == "__main__":
 
 
     # experiment_kNN('Car', 0.8)
-    #experiment_kNN('MoteStrain', 1)
+    # experiment_kNN('MoteStrain', 1)
+    # experiment_kNN('Trace', 0.3)
     
+
     # experiment_kNN('ProximalPhalanxOutlineAgeGroup', 0.1)
     # experiment_kNN("ECG200", 3)
-    experiment_kNN('ECGFiveDays', 5)
+    # experiment_kNN('ECGFiveDays', 5)
     # experiment_kNN('TwoLeadECG', 0.1)
-    
-    #experiment_kNN('SyntheticControl', 4)
+    # experiment_kNN('SyntheticControl', 4)
     # experiment_kNN('Chinatown', 1)
     # experiment_kNN('ItalyPowerDemand', 7)
+    # experiment_kNN('ToeSegmentation2', 0.8)
+    experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
+    # experiment_kNN('DistalPhalanxTW', 0.5)
 
 
     # experiment_kNN('MedicalImages', 4)
     # experiment_kNN('ArrowHead', 3)
-    experiment_kNN('ToeSegmentation2', 0.8)
     # experiment_kNN('ToeSegmentation1', 0.1)
     # experiment_kNN('Meat', 0.9)
     # experiment_kNN('ShapeletSim', 2)
