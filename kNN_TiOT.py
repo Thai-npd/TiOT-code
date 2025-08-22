@@ -110,14 +110,14 @@ def plot_results(results, plot_file):
     alg_names = [k for k in results.keys() if k != 'eps']
     sns.set(style="whitegrid", context="paper")
     plt.figure(figsize=(8, 5))
-    markers = ['s', 'o', 'D', '^', 'v', 'P', 'X']
-    linestyles = ['-', '-', "-", '--', "-.", '-', '-', '-']
+    markers = ['o', '^', 'D',  'v', 'P', 'X']
+    linestyles = ['-', '-', "-", '-', '-']
     i = 0
     for name in alg_names:
-        plt.plot(eps_list, np.array(results[name]), label = name, linewidth=1.75, marker=markers[i], linestyle = linestyles[i])
+        plt.plot(eps_list, np.array(results[name]), label = name, linewidth=1.75, marker=markers[i], linestyle = linestyles[i], markersize = 7)
         i+=1
-    plt.xlabel(r"$\varepsilon$", fontsize = 14)
-    plt.ylabel("Error", fontsize = 14)
+    plt.xlabel(r"$\varepsilon$", fontsize = 16)
+    plt.ylabel("Error", fontsize = 16)
     plt.legend()
     plt.tight_layout()
     plt.savefig(plot_file, dpi=300)  # High-resolution
@@ -135,21 +135,19 @@ def read_result(result_file):
 
 def experiment_kNN(dataset_name, w_TAOT, RUN = True):
     eps_list = [0.01*i for i in range(1,11)]
-    #eps_list = [0.02*i for i in range(2,6)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
     plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
     result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
     if RUN :
         data = process_data(dataset_name = dataset_name)
         w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
-        alg_names = ["eTiOT"]  +  [f"eTAOT(w = {w})" for w in w_list]
+        w_list_name = [r'\omega_{\text{grid}} \;/\; 5', r'\omega_{\text{grid}}', r'\omega_{\text{grid}} \times 5']
+        alg_names = ["eTiOT"]  +  [fr"eTAOT$(\omega = {w})$" for w in w_list_name]
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
-        #w_opt = get_w_opt(data[0], data[1])
         for eps in eps_list:
             results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = None))
-            #results["eTAOT(w = w*)"].append(kNN(dataset_name, data, metric_name='eTAOT', eps = eps, w = w_opt))
-            for w in w_list:
-                results[f"eTAOT(w = {w})"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w))
+            for i in range(len(w_list)):
+                results[fr"eTAOT$(\omega = {w_list_name[i]})$"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w_list[i]))
 
         save_result(results, result_file)
         plot_results(results, plot_file)
@@ -166,9 +164,10 @@ if __name__ == "__main__":
     # experiment_kNN("ProximalPhalanxTW", 0.7)
     # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
+    experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, RUN=False)
     
-    # experiment_kNN('Adiac',0.1) --> need to re-run
-    #experiment_kNN('SwedishLeaf',0.9) --> need to re-run
+    # experiment_kNN('SwedishLeaf',0.9) 
+    # experiment_kNN('Adiac',0.1) 
 
     # ==> New data
     # experiment_kNN('Coffee', 2 )
@@ -194,7 +193,6 @@ if __name__ == "__main__":
     # experiment_kNN('Chinatown', 1)
     # experiment_kNN('ItalyPowerDemand', 7)
     # experiment_kNN('ToeSegmentation2', 0.8)
-    experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
     # experiment_kNN('DistalPhalanxTW', 0.5)
 
 
