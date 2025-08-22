@@ -164,8 +164,8 @@ if __name__ == "__main__":
     # experiment_kNN("ProximalPhalanxTW", 0.7)
     # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
-    experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, RUN=False)
-    
+    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
+    experiment_kNN('DistalPhalanxTW', 0.5 )
     # experiment_kNN('SwedishLeaf',0.9) 
     # experiment_kNN('Adiac',0.1) 
 
