@@ -12,7 +12,8 @@ from sklearn.metrics import accuracy_score
 from tqdm import tqdm
 import csv
 import time
-
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold
 
 eps_global = 0.01
 w_global = 10
@@ -31,60 +32,66 @@ def process_data(dataset_name ):
     test_file = os.path.join("time_series_kNN", dataset_name, dataset_name + "_TEST.txt")
 
     with open(train_file, "r") as file:
-        data = [line.strip().split() for line in file]
+        data = np.array([line.strip().split() for line in file], dtype=float)
 
-    # Convert to numerical values if needed
-    data = [[float(value) for value in row] for row in data]
+    # # Convert to numerical values if needed
+    # data = [[float(value) for value in row] for row in data]
 
-    Y_train = [row[0] for row in data]
-    X_train = [row[1:] for row in data]
+    Y_train = data[:, 0]      # first column
+    X_train = data[:, 1:]     # all columns except the first
+
 
     with open(test_file, "r") as file:
-        data_test = [line.strip().split() for line in file]
+        data_test = np.array([line.strip().split() for line in file], dtype=float)
 
-    # Convert to numerical values if needed
-    data_test = [[float(value) for value in row] for row in data_test]
 
-    Y_test = [row[0] for row in data_test]
-    X_test = [row[1:] for row in data_test]
+    Y_test = data_test[:, 0]
+    X_test = data_test[:, 1:] 
 
     return [X_train, Y_train, X_test, Y_test]
 
-def get_w_opt(X_train, Y_train):
-    np.random.seed(0)
-    # unique_labels = np.unique(Y_train)
-    # label_1, label_2 = unique_labels[0], unique_labels[1]
+def my_cross_val_score(model, X, y, cv=3):
+    """
+    Replicates sklearn's cross_val_score for KNN without parallelization.
+    
+    Parameters
+    ----------
+    X : array-like, shape (n_samples, n_features)
+        Feature matrix.
+    y : array-like, shape (n_samples,)
+        Target vector.
+    cv : int
+        Number of folds for cross-validation.
+    n_neighbors : int
+        Number of neighbors for KNN.
+    
+    Returns
+    -------
+    scores : list of float
+        Accuracy scores for each fold.
+    """
+    kf = KFold(n_splits=cv, shuffle=True, random_state=0)
+    scores = []
 
-    # dist_min = np.inf
-    # w_opt = 0
-    # label_1_index = np.where(Y_train == label_1)[0]
-    # label_2_index = np.where(Y_train == label_2)[0]
-    # n_pairs = min(len(label_1_index), len(label_2_index))
-    # for _ in range(n_pairs):
-    #     idx1 = np.random.choice(label_1_index)
-    #     idx2 = np.random.choice(label_2_index)
-    #     distance, plan, w = TiOT_lib.eTiOT(X_train[idx1], X_train[idx2], eps=eps, freq=k_global)
-    #     if dist_min > distance:
-    #         dist_min = distance
-    #         w_opt = w
-    # print(f"===> w_opt = {w_opt}")
+    for train_idx, test_idx in kf.split(X):
+        # Split data
+        X_train, X_test = X[train_idx], X[test_idx]
+        y_train, y_test = y[train_idx], y[test_idx]
 
-    dist_min = np.inf
-    w_opt = 0
-    all_pairs = [(i, j) for i in range(len(Y_train)) for j in range(len(Y_train)) if i < j and Y_train[i] != Y_train[j]]
-    selected_pairs = [all_pairs[idx] for idx in np.random.choice(len(all_pairs), size=len(Y_train), replace=False)]
-    for idx1, idx2 in selected_pairs:
-        distance, plan, w = TiOT_lib.eTiOT(X_train[idx1], X_train[idx2], eps=0.01, freq=5)
-        if dist_min > distance:
-            dist_min = distance
-            w_opt = w
-    print(f"===> w_opt = {w_opt}")
-    return w_opt
+        # Fit KNN
+        model.fit(X_train, y_train)
 
-def kNN(dataset_name, data, metric_name , eps , w ):
+        # Evaluate
+        with multiprocessing.Pool(64) as pool:
+            y_pred = list(tqdm(pool.imap(model.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
+        acc = accuracy_score(y_test, y_pred)
+        scores.append(acc)
+    error = 1 - np.array(scores).mean()
+    return error
+
+def kNN(dataset_name, data, metric_name , eps_list , w ):
     global w_global, eps_global
     w_global = w
-    eps_global = eps
     if metric_name == "oriTAOT":
         metric = oriTAOT
     elif metric_name == "eTiOT":
@@ -95,15 +102,30 @@ def kNN(dataset_name, data, metric_name , eps , w ):
         metric = eTAOT
 
     X_train, Y_train, X_test, Y_test = data[0], data[1], data[2], data[3]
+    eps_best = 0
+    error_best = np.inf
+    errors = []
+    for eps in eps_list:
+        eps_global = eps
+        print(f"Start cross validation with metric = {metric_name}, eps = {eps}")
+        knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
+        error = my_cross_val_score(knn, X_train, Y_train, cv = 3)
+        errors.append(error)
+        if error_best >= error:
+            eps_best = eps
+            error_best = error
+    eps_global = eps_best
+    print(f"After cross validation eps_best = {eps_best} with average error {error_best}")
     knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
     knn.fit(X_train, Y_train)
     with multiprocessing.Pool(64) as pool:
         y_pred = list(tqdm(pool.imap(knn.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
     pool.close()
     accuracy = accuracy_score(Y_test, y_pred)
-    error = 1 - accuracy
-    print(f"  ====>  Completed dataset: {dataset_name}, Metric : {metric_name}, Error:",error)
-    return error
+    final_error = 1 - accuracy
+    print(f"  ====>  Completed dataset: {dataset_name}, Metric : {metric_name}, eps = {eps_best}, Error:",final_error)
+    errors.append(final_error)
+    return errors
 
 def plot_results(results, plot_file):
     eps_list = results['eps']
@@ -134,20 +156,18 @@ def read_result(result_file):
     return results
 
 def experiment_kNN(dataset_name, w_TAOT, RUN = True):
-    eps_list = [0.01*i for i in range(1,11)]
+    eps_list = [0.005*i for i in range(1,21)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
-    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
-    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
+    plot_file = os.path.join("kfold_kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
+    result_file = os.path.join("kfold_kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
     if RUN :
         data = process_data(dataset_name = dataset_name)
-        w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
-        w_list_name = [r'\omega_{\text{grid}} \;/\; 5', r'\omega_{\text{grid}}', r'\omega_{\text{grid}} \times 5']
-        alg_names = ["eTiOT"]  +  [fr"eTAOT$(\omega = {w})$" for w in w_list_name]
+        alg_names = ["eTiOT"] 
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
-        for eps in eps_list:
-            results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = None))
-            for i in range(len(w_list)):
-                results[fr"eTAOT$(\omega = {w_list_name[i]})$"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w_list[i]))
+        results['eps'].append('Final error')
+        results['eTiOT'] = kNN(dataset_name, data, metric_name='eTiOT', eps_list= eps_list, w = None)
+        results['eTAOT'] = kNN(dataset_name, data, metric_name='eTAOT', eps_list= eps_list, w = w_TAOT)
+        print('')
 
         save_result(results, result_file)
         plot_results(results, plot_file)
@@ -160,16 +180,18 @@ if __name__ == "__main__":
 
     # experiment_kNN("SonyAIBORobotSurface1", 2)
     # experiment_kNN("CBF", 1)
-    # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
     # experiment_kNN("ProximalPhalanxTW", 0.7)
+    # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
     # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
     # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
-    # experiment_kNN('DistalPhalanxTW', 0.5 )
-    experiment_kNN('SwedishLeaf',0.9, RUN=False) 
-    experiment_kNN('Adiac',0.1, RUN=False) 
+    experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
+    experiment_kNN('MiddlePhalanxTW', 0.4)
+    # experiment_kNN('SwedishLeaf',0.9) 
+    # experiment_kNN('Adiac',0.1) 
 
     # ==> New data
+    # experiment_kNN('DistalPhalanxTW', 0.5 )
     # experiment_kNN('Coffee', 2 )
     # experiment_kNN('Plane', 0.5)
     # experiment_kNN('BeetleFly', 0.3)
