@@ -10,19 +10,19 @@ import csv
 import seaborn as sns
 
 
-def plot_graph(results, plot_file):
-    lags = results['lag']
-    metric_names = [k for k in results.keys() if k != 'lag']
+def plot_graph(results, plot_file, index_name, x_label, y_label):
+    indices = results[index_name]
+    names = [k for k in results.keys() if k != index_name]
     sns.set(style="whitegrid", context="paper")
     plt.figure(figsize=(8, 5))
     markers = ['', 'o', 's', '^', 'D', 'v', 'P', 'X']
     linestyles = ['-', '--', '-.', ':', '-', '-', '-', '-']
     i = 0
-    for name in metric_names:
-        plt.plot(lags, results[name], label = name, linewidth=1.75, linestyle = linestyles[i])
+    for name in names:
+        plt.plot(indices, results[name], label = name, linewidth=1.75, linestyle = linestyles[i])
         i+=1
-    plt.xlabel("Lag (days)", fontsize = 14)
-    plt.ylabel("Distance", fontsize = 14)
+    plt.xlabel(x_label, fontsize = 14)
+    plt.ylabel(y_label, fontsize = 14)
     plt.legend()
     plt.tight_layout()
     plt.savefig(plot_file, dpi=300)  # High-resolution
@@ -37,8 +37,7 @@ def read_result(result_file):
     results = df.to_dict(orient='list')
     return results
 
-def main():
-    RUN = True
+def dist_lag_exp(RUN = True):
     start = 0
     lags = range(0, 730)
     length = 365
@@ -61,31 +60,38 @@ def main():
                 results[f'TAOT(w = {w})'].append(TAOT(df['meantemp'].iloc[start:start + length], df['meantemp'].iloc[start + lag:start + lag+length], w = w)[0])
             print(f"Done Lag = {lag}")
         save_result(results, result_file)
-        plot_graph(results, plot_file)
+        plot_graph(results, plot_file, 'lag', 'Lag(days)', 'Distance')
     else:
         results = read_result(result_file)
-        plot_graph(results, plot_file)
+        plot_graph(results, plot_file, 'lag', 'Lag(days)', 'Distance')
+
+def dist_w_exp(RUN = True):
+    file_path = 'DailyDelhiClimateTrain.csv'
+    df = pd.read_csv(file_path)
+    df['date'] = pd.to_datetime(df['date'])
+    df.set_index('date', inplace=True)
+    lags = [20,50,80,180]
+    w_list = [0.1 * i for i in range(11)]
+    x = [df['meantemp'].iloc[:365]]
+    dists = []
+    result_file = os.path.join("lag_series_data", f"Results TAOT distances with w on {file_path}(lag {lags[0]} to {lags[-1]}).csv")
+    plot_file = os.path.join("lag_series_data", f"Plot TAOT distances with w on {file_path}(lag {lags[0]} to {lags[-1]}).pdf")
+
+    if RUN:
+        for lag in lags:
+            x.append(df['meantemp'].iloc[lag:lag + 365])
+        results = {**{'w' : w_list}, **{f'lag = {lag}': [] for lag in lags}}
+        for i ,lag in zip(range(1, len(x)), lags):
+            for w in w_list:
+                results[f'lag = {lag}'].append(TiOT_lib.TAOT(x[0].to_list(), x[i].to_list(), w = w)[0])
+            print(f'Complete lag = {lag}')
+        save_result(results, result_file)
+        plot_graph(results, plot_file, 'w', r"$w$", r'TAOT($w$)')
+    else:
+        results = read_result(result_file)
+        plot_graph(results, plot_file, 'w', r"$w$", r'TAOT($w$)')
+
+def main():
+    dist_lag_exp(RUN=False)
 
 main()
-
-    #results = {}
-    # with open(result_file, "r") as f:
-    #     reader = csv.reader(f)
-    #     header = next(reader)
-    #     alg_names = header[1:]
-    #     results['lag'] = []
-    #     for name in alg_names:
-    #         results[name] = []
-    #     for row in reader:
-    #         results['lag'].append(row[0])
-    #         for i, name in enumerate(alg_names):
-    #             if row[i+1] != '':
-    #                 results[name].append(float(row[i + 1]))
-    #             else:
-    #                 results[name].append(None)
-
-    # with open(result_file, 'w', newline='') as f:
-    #     writer = csv.writer(f)
-    #     writer.writerow(results.keys())  # header
-    #     rows = zip(*results.values())    # transpose
-    #     writer.writerows(rows)  
