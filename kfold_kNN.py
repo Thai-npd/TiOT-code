@@ -164,10 +164,9 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True):
         data = process_data(dataset_name = dataset_name)
         alg_names = ["eTiOT"] 
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
-        results['eps'].append('Final error')
         results['eTiOT'] = kNN(dataset_name, data, metric_name='eTiOT', eps_list= eps_list, w = None)
         results['eTAOT'] = kNN(dataset_name, data, metric_name='eTAOT', eps_list= eps_list, w = w_TAOT)
-        print('')
+        results['eps'].append('Final error')
 
         save_result(results, result_file)
         plot_results(results, plot_file)
@@ -179,15 +178,15 @@ if __name__ == "__main__":
     # ===> Tier 1 
 
     # experiment_kNN("SonyAIBORobotSurface1", 2)
-    # experiment_kNN("CBF", 1)
     # experiment_kNN("ProximalPhalanxTW", 0.7)
     # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
     # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
     # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
-    experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
-    experiment_kNN('MiddlePhalanxTW', 0.4)
+    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
+    # experiment_kNN('MiddlePhalanxTW', 0.4)
     # experiment_kNN('SwedishLeaf',0.9) 
+    experiment_kNN("CBF", 1)
     # experiment_kNN('Adiac',0.1) 
 
     # ==> New data
