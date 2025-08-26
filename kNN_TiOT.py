@@ -166,9 +166,11 @@ if __name__ == "__main__":
     # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
     # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
     # experiment_kNN('DistalPhalanxTW', 0.5 )
-    experiment_kNN('SwedishLeaf',0.9, RUN=False) 
-    experiment_kNN('Adiac',0.1, RUN=False) 
-
+    # experiment_kNN('SwedishLeaf',0.9) 
+    # experiment_kNN('Adiac',0.1) 
+    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
+    experiment_kNN('MiddlePhalanxTW', 0.4)
+    
     # ==> New data
     # experiment_kNN('Coffee', 2 )
     # experiment_kNN('Plane', 0.5)
