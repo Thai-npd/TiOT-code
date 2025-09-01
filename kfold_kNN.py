@@ -158,14 +158,13 @@ def read_result(result_file):
 def experiment_kNN(dataset_name, w_TAOT, RUN = True):
     eps_list = [0.005*i for i in range(1,21)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
-    plot_file = os.path.join("kfold_kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
+    plot_file = os.path.join("kfold_kNN_data","plots", "Comparison on " + dataset_name + eps_name  + ".pdf")
     result_file = os.path.join("kfold_kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
     if RUN :
         data = process_data(dataset_name = dataset_name)
-        alg_names = ["eTiOT"] 
-        results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
+        results = {**{'eps': eps_list}}
         results['eTiOT'] = kNN(dataset_name, data, metric_name='eTiOT', eps_list= eps_list, w = None)
-        results['eTAOT'] = kNN(dataset_name, data, metric_name='eTAOT', eps_list= eps_list, w = w_TAOT)
+        # results['eTAOT'] = kNN(dataset_name, data, metric_name='oriTAOT', eps_list= eps_list, w = w_TAOT)
         results['eps'].append('Final error')
 
         save_result(results, result_file)
@@ -177,8 +176,9 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True):
 if __name__ == "__main__":
     # ===> Tier 1 
 
+    # experiment_kNN("CBF", 1)
     # experiment_kNN("SonyAIBORobotSurface1", 2)
-    # experiment_kNN("ProximalPhalanxTW", 0.7)
+    experiment_kNN("ProximalPhalanxTW", 0.7)
     # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
     # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
@@ -186,7 +186,6 @@ if __name__ == "__main__":
     # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
     # experiment_kNN('MiddlePhalanxTW', 0.4)
     # experiment_kNN('SwedishLeaf',0.9) 
-    experiment_kNN("CBF", 1)
     # experiment_kNN('Adiac',0.1) 
 
     # ==> New data
