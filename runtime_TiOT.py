@@ -25,7 +25,7 @@ def process_data(dataset_name, start1, start2, numpoint ):
     return X1, X2
 
 def eTiOT(x,y, verbose = False):
-    return TiOT_lib.eTiOT(x, y, w_update_freq=20, verbose=verbose)
+    return TiOT_lib.eTiOT(x, y, freq=20, verbose=verbose)
 
 def get_runtime(x,y, metric):
     start = time.perf_counter()
@@ -81,7 +81,7 @@ def main():
     RUN = True
     dataset_name = 'PigCVP' # PigCVP Rock
     #lengths = [100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
-    lengths = [300,600,900,1200,1500,1800,2100,2400,2700] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
+    lengths = [200,400,600,800,1000,1200,1400,1600,1800,2000] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
     metrics = [TiOT, TAOT, eTiOT, eTAOT]
     result_file = os.path.join("runningtime_data", f"Results runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).csv")
     plot_file = os.path.join("runningtime_data", f"Plot runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).pdf")
