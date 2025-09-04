@@ -93,7 +93,7 @@ def TiOT(x, y, a = None, b = None, detail_mode = False, verbose = False):
     x,y = normalization(x,y)    
     I = -np.eye(n)
     J = -np.eye(m)
-    A = np.array([np.concatenate((I[i], J[j])) for i in range(n) for j in range(m)])
+    A = np.array([np.concatenate((I[i], J[j])) for i in range(n) for j in range(m)], dtype=np.float32)
     extraCol = np.array([[(t[i] - s[j])**2 - np.linalg.norm(x[i] - y[j])**2 for i in range(n) for j in range(m)]])
     A = np.hstack((A, extraCol.T))
     r = np.array([(t[i] - s[j])**2 for i in range(n) for j in range(m)])
@@ -231,7 +231,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
     return np.sum(C * transport_plan), transport_plan, w, 
 
 
-def TAOT(x, y, a = None, b = None, w = 0.5, costmatrix = costmatrix1):
+def TAOT(x, y, a = None, b = None, w = 0.5, costmatrix = costmatrix1, verbose = None):
     """
     Solve the Time Adaptive Optimal Transport (TAOT) problem between two empirical distributions.
 
