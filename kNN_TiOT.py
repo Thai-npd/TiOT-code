@@ -135,6 +135,7 @@ def read_result(result_file):
 
 def experiment_kNN(dataset_name, w_TAOT, RUN = True):
     eps_list = [0.01*i for i in range(1,11)]
+    eps_list = [0.005*i for i in range(1,21)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
     plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
     result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '.csv')
@@ -166,12 +167,13 @@ if __name__ == "__main__":
     # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
     # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
     # experiment_kNN('DistalPhalanxTW', 0.5 )
-    # experiment_kNN('SwedishLeaf',0.9) 
-    # experiment_kNN('Adiac',0.1) 
-    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
+    experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
     experiment_kNN('MiddlePhalanxTW', 0.4)
+    experiment_kNN('SwedishLeaf',0.9) 
+    experiment_kNN('Adiac',0.1) 
     
     # ==> New data
+    # experiment_kNN("SonyAIBORobotSurface2", 10)
     # experiment_kNN('Coffee', 2 )
     # experiment_kNN('Plane', 0.5)
     # experiment_kNN('BeetleFly', 0.3)
