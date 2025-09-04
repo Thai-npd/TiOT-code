@@ -1,8 +1,9 @@
 import numpy as np
 import ot
 from scipy.optimize import linprog
+from scipy.sparse import csr_matrix, hstack, vstack
 np.seterr(divide='ignore', invalid='ignore', over='ignore')
-
+import time
 def normalization(x,y):
     """
     Normalize input time series by formular
@@ -63,7 +64,7 @@ def costmatrix1(x,y, w) -> np.ndarray :
     
     return M  
 
-def TiOT(x, y, a = None, b = None, detail_mode = False, verbose = False):
+def TiOT(x, y, a = None, b = None, detail_mode = False, verbose = False, timing = False):
     """
     Solve the Time-integrated Optimal Transport (TiOT) problem between two discrete distributions.
 
@@ -74,6 +75,7 @@ def TiOT(x, y, a = None, b = None, detail_mode = False, verbose = False):
         b (ndarray, optional): 1D array of shape (m,) representing target weights (default: uniform weights).
         detail_mode (bool, optional): If False (default), returns distance, optimal w
                                       If True, returns distance, transport plan, optimal w
+        timing (bool, optinal): If True, record the elapsed time and return it
 
     Returns:
         tuple: 
@@ -95,19 +97,26 @@ def TiOT(x, y, a = None, b = None, detail_mode = False, verbose = False):
     J = -np.eye(m)
     A = np.array([np.concatenate((I[i], J[j])) for i in range(n) for j in range(m)], dtype=np.float32)
     extraCol = np.array([[(t[i] - s[j])**2 - np.linalg.norm(x[i] - y[j])**2 for i in range(n) for j in range(m)]])
+    start = time.perf_counter() 
     A = np.hstack((A, extraCol.T))
     r = np.array([(t[i] - s[j])**2 for i in range(n) for j in range(m)])
     c = np.array(np.concatenate((a,b, [0])))
     bounds = [(None, None) for var in range(m+n)] + [(0,1)]
     res = linprog(c, A_ub=A, b_ub=r, bounds=bounds)
-    if detail_mode == False:
-        return -res.fun, res.x[-1]
+    end = time.perf_counter()
+
+    if timing == True:
+        if detail_mode == False:
+            return -res.fun, res.x[-1], end - start
+        else:
+            return -res.fun, TAOT(x,y, w = res.x[-1])[1], res.x[-1], end -start
     else:
-        return -res.fun, TAOT(x,y, w = res.x[-1])[1], res.x[-1]
+        if detail_mode == False:
+            return -res.fun, res.x[-1]
+        else:
+            return -res.fun, TAOT(x,y, w = res.x[-1])[1], res.x[-1]
 
-
-
-def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.005, solver = 'newton', subprob_tol = 10**-7, freq = 1, verbose = False):
+def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.005, solver = 'PGD', subprob_tol = 10**-7, freq = 1, verbose = False, timing = False):
     """
     Solves the entropic Time-integrated Optimal Transport (eTiOT) problem use block coordinate descent.
 
@@ -123,6 +132,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
         subprob_tol (float, optional): Tolerance for solving the inner subproblem (e.g., newton). Default is 1e-7.
         freq (int, optional): Frequency (in iterations) at which the weight variable `w` is updated. Default is 1.
         verbose (bool, optional): If True, prints progress. Default is False.
+        timing (bool, optinal): If True, record the elapsed time and return it
 
     Returns:
         tuple: distance, transport plan, optimal w
@@ -174,14 +184,14 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
         K = np.exp(-C/eps)
         return w, K
     
-    def PGD(g,h, w, subprob_tol = 10**-7, maxIter = 1, eta = 10**-2):
+    def PGD(g,h, w, subprob_tol = 10**-7, maxIter = 20, eta = 10**-2):
         def f(w):
             C = w*value_diff + (1-w)*time_diff
             K = np.exp(-C/eps)
             return  -eps * np.log(g) @ a - eps * np.log(h) @ b + eps * (g.T @ K @ h)
         
         def df(w):
-            nC =  w * TV - time_diff 
+            nC =  w * TV - time_diff
             K = np.exp(nC/(eps))
             return g.T @ ((TV * K) @ h)
         
@@ -196,7 +206,6 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
             w_prev = w
             w = proj(w - eta*df(w))
             if np.abs(w-w_prev) < subprob_tol:
-                #print(f"PGD Algorithm converges after {i+1} iterations with w = {w}")
                 break
         if i == maxIter: print(f"PGD Algorithm does not converge after {i} iterations")
         C = w*value_diff + (1-w)*time_diff
@@ -205,16 +214,13 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
 
     g, h, w = np.ones(n)/n , np.ones(m)/m , 0.5
     C = w*value_diff + (1-w)*time_diff
+    start = time.perf_counter()
     K = np.exp(-C/eps)
     curIter = 0
     if solver == 'newton': solver = newton
     else:
-        if verbose == True: 
-            print("Choose 'PGD' by default. ")
         solver = PGD
-
     while curIter < maxIter:
-        #print(f"   ======>   Iteration {curIter}")
         g = a/ (K @ h)
         h = b/(K.T @ g)
         if curIter % freq ==0 :
@@ -228,10 +234,14 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
         if curIter == maxIter: print(f"TiOT algorithm did not stop after {maxIter} iterations")
     C = w*value_diff + (1-w)*time_diff
     transport_plan = np.diag(g) @ K @ np.diag(h)
-    return np.sum(C * transport_plan), transport_plan, w, 
+    end = time.perf_counter()
+    if timing == True:
+        return np.sum(C * transport_plan), transport_plan, w, end - start
+    else:
+        return np.sum(C * transport_plan), transport_plan, w
 
 
-def TAOT(x, y, a = None, b = None, w = 0.5, costmatrix = costmatrix1, verbose = None):
+def TAOT(x, y, a = None, b = None, w = 0.5, costmatrix = costmatrix1, verbose = None, timing = False):
     """
     Solve the Time Adaptive Optimal Transport (TAOT) problem between two empirical distributions.
 
@@ -242,20 +252,26 @@ def TAOT(x, y, a = None, b = None, w = 0.5, costmatrix = costmatrix1, verbose = 
         b (ndarray, optional): 1D array of shape (m,) representing target weights (default: uniform weights).
         w (float, optional): Weight parameter to compute cost matrix C.
         costmatrix (callable, optional): A function to compute the cost matrix between x and y. Default is `costmatrix1`.
+        timing (bool, optinal): If True, record the elapsed time and return it
 
     Returns:
         tuple: distance, transport_plan
     """
     n, m = len(x), len(y)
     M = costmatrix(x, y, w)
+    start = time.perf_counter()
     if a == None: a = np.ones(n) / n
     if b == None: b = np.ones(m) / m
-    result = ot.lp.emd2(a,b,M, return_matrix=True) # ot.emd2(a,b,M, return_matrix=True)
+    result = ot.lp.emd2(a,b,M, numItermax = 10**7, return_matrix=True) # ot.emd2(a,b,M, return_matrix=True)
     distance = result[0]
     transport_plan = result[1]['G']
-    return distance, transport_plan
+    end = time.perf_counter()
+    if timing == True:
+        return distance, transport_plan, end -start
+    else:
+        return distance, transport_plan
 
-def eTAOT(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix1,  maxIter=5000, tolerance=0.005, verbose = False):
+def eTAOT(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix1,  maxIter=5000, tolerance=0.005, freq = 20, verbose = False, timing = False):
     """
     Solves the entropic Time Adaptive Optimal Transport (eTAOT) problem between two empirical distributions.
 
@@ -270,12 +286,13 @@ def eTAOT(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix
         maxIter (int, optional): Maximum number of iterations for BCD. Default is 5000.
         tolerance (float, optional): Convergence tolerance for BCD. Default is 0.005.
         verbose (bool, optional): If True, prints progress and debug information. Default is False.
-                
+        timing (bool, optinal): If True, record the elapsed time and return it
     Returns:
         tuple: distance, transport_plan
     """
     n, m = len(x), len(y)
     M = costmatrix(x, y, w)
+    start = time.perf_counter()
     if a == None: a = np.ones(n) / n
     if b == None: b = np.ones(m) / m
     K = np.exp(-M/eps)
@@ -286,7 +303,7 @@ def eTAOT(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix
         g = a/ (K @ h)
         h = b/(K.T @ g)
         
-        if curIter % 20 == 0:
+        if curIter % freq == 0:
             criterion = np.sum(np.abs(g * (K @ h) - a))
             if criterion < tolerance:
                 if verbose == True: 
@@ -297,7 +314,20 @@ def eTAOT(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix
         if curIter == maxIter: print(f"TAOT algorithm did not stop after {maxIter} iterations")
     transport_plan = np.diag(g) @ K @ np.diag(h)
     distance = np.sum(M * transport_plan)
-    
-    return distance, transport_plan
+    end = time.perf_counter()
+    if timing == True:
+        return distance, transport_plan, end - start
+    else:
+        return distance, transport_plan
 
 
+# def sinkhorn(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix1,  maxIter=5000, tolerance=0.005, freq = 20, verbose = False):
+#     n, m = len(x), len(y)
+#     M = costmatrix(x, y, w)
+#     start = time.perf_counter()
+#     if a == None: a = np.ones(n) / n
+#     if b == None: b = np.ones(m) / m
+#     end = time.perf_counter()
+#     print(f"Complete solving TiOT problem after {end - start} (s)")
+
+#     return ot.bregman.sinkhorn_knopp(a,b,M, reg  = 1/eps, verbose = True)

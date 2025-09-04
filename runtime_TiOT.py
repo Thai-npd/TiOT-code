@@ -4,7 +4,7 @@ from collections import defaultdict
 import seaborn as sns
 import matplotlib.pyplot as plt
 import TiOT_lib
-from TiOT_lib import TiOT,  TAOT, eTAOT
+from TiOT_lib import TiOT,  TAOT
 import os
 import time
 import csv
@@ -24,14 +24,15 @@ def process_data(dataset_name, start1, start2, numpoint ):
     X2 = X[start2: start2 + numpoint]
     return X1, X2
 
-def eTiOT(x,y, verbose = False):
-    return TiOT_lib.eTiOT(x, y, freq=20, verbose=verbose)
+def eTiOT(x,y, verbose = False, timing  = True):
+    return TiOT_lib.eTiOT(x, y, eps=0.1, freq=20, verbose=verbose, timing=timing)
+
+def eTAOT(x,y, verbose = False, timing  = True):
+    return TiOT_lib.eTAOT(x, y, eps=0.1, freq=20, verbose=verbose, timing=timing)
 
 def get_runtime(x,y, metric):
-    start = time.perf_counter()
-    metric(x,y, verbose = True)
-    end = time.perf_counter()
-    return end - start
+    outputs = metric(x,y, verbose = True, timing = True)
+    return outputs[-1]
 
 def combine_runtimes(X1, X2, metrics, lengths):
     num_point = len(X1)
@@ -40,7 +41,7 @@ def combine_runtimes(X1, X2, metrics, lengths):
     for length in lengths:
         print(f"Start length {length}")
         for metric in metrics:
-            if metric == TiOT  and length > 900:
+            if metric == TiOT  and length > 600:
                 results[metric.__name__].append(None)
                 print(f"  ===> Done algorithm {metric.__name__} ")
                 continue
@@ -61,6 +62,7 @@ def plot_runtime(results, plot_file):
     for name in metric_names:
         plt.plot(lengths[:len(results[name])], results[name], label = name, linewidth=1.75, marker = markers[i])
         i+=1
+    plt.yscale("log")    
     plt.xlabel("Series' lengths", fontsize = 14)
     plt.ylabel("Running time (s)", fontsize = 14)
     plt.legend()
@@ -77,17 +79,57 @@ def read_result(result_file):
     results = df.to_dict(orient='list')
     return results
 
+def gaussian_mixture_timeseries(length, n_components=3, weights=None, means=None, stds=None, random_state=None):
+    """
+    Generate a Gaussian mixture time series.
+    
+    Parameters:
+        length (int): Length of the time series.
+        n_components (int): Number of Gaussian components.
+        weights (list or None): Mixing weights (must sum to 1). If None, uniform weights are used.
+        means (list or None): Means of Gaussians. If None, random values are used.
+        stds (list or None): Standard deviations of Gaussians. If None, random values are used.
+        random_state (int or None): Random seed for reproducibility.
+
+    Returns:
+        ts (ndarray): Generated time series of shape (length,).
+        component_ids (ndarray): The component index chosen at each time step.
+    """
+    rng = np.random.default_rng(random_state)
+
+    # Default weights
+    if weights is None:
+        weights = np.ones(n_components) / n_components
+    weights = np.array(weights) / np.sum(weights)  # normalize
+    
+    # Default means and stds
+    if means is None:
+        means = rng.uniform(-5, 5, size=n_components)
+    if stds is None:
+        stds = rng.uniform(0.5, 2.0, size=n_components)
+
+    # Sample component for each time step
+    component_ids = rng.choice(n_components, size=length, p=weights)
+    
+    # Draw samples from corresponding Gaussians
+    ts = rng.normal(means[component_ids], stds[component_ids])
+    
+    return ts
+
 def main():
     RUN = True
     dataset_name = 'PigCVP' # PigCVP Rock
     #lengths = [100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
-    lengths = [200,400,600,800,1000,1200,1400,1600,1800,2000] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
+    lengths = [100* i for i in range(1, 11)] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
     metrics = [TiOT, TAOT, eTiOT, eTAOT]
     result_file = os.path.join("runningtime_data", f"Results runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).csv")
     plot_file = os.path.join("runningtime_data", f"Plot runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).pdf")
 
     if RUN:
-        X1, X2 = process_data(dataset_name, start1=0, start2=10, numpoint=3)
+        X1, X2 = process_data(dataset_name, start1=0, start2=10, numpoint=1)
+        X1  = gaussian_mixture_timeseries(2000, n_components=100, random_state=0).reshape(1,-1)
+        X2 = gaussian_mixture_timeseries(2000, n_components=100, random_state=1).reshape(1,-1)
+        print(X1.shape)
         results = combine_runtimes(X1, X2, metrics, lengths)
         save_result(results, result_file)
         plot_runtime(results, plot_file)
