@@ -79,8 +79,8 @@ def TiOT(x, y, a = None, b = None, detail_mode = False, verbose = False, timing 
 
     Returns:
         tuple: 
-            - If `detail_mode=False`: returns a transport plan matrix of shape (n, m).
-            - If `detail_mode=True`: returns a dictionary containing the transport plan and additional details.
+            - If `detail_mode=False`: returns distance and optimal w.
+            - If `detail_mode=True`: returns distance, transport plan and optimal w.
 
     Notes:
         - The input distributions `a` and `b` must sum to 1 if provided.
@@ -321,13 +321,15 @@ def eTAOT(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix
         return distance, transport_plan
 
 
-# def sinkhorn(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix1,  maxIter=5000, tolerance=0.005, freq = 20, verbose = False):
-#     n, m = len(x), len(y)
-#     M = costmatrix(x, y, w)
-#     start = time.perf_counter()
-#     if a == None: a = np.ones(n) / n
-#     if b == None: b = np.ones(m) / m
-#     end = time.perf_counter()
-#     print(f"Complete solving TiOT problem after {end - start} (s)")
+def sinkhorn(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix1,  maxIter=5000, tolerance=0.005, freq = 20, verbose = False):
+    n, m = len(x), len(y)
+    M = costmatrix(x, y, w)
+    start = time.perf_counter()
+    if a == None: a = np.ones(n) / n
+    if b == None: b = np.ones(m) / m
+    transport_plan = ot.bregman.sinkhorn_knopp(a,b,M, reg  = 1/eps, verbose = True)
+    distance = np.sum(M * transport_plan)
+    end = time.perf_counter()
+    print(f"Complete solving TiOT problem after {end - start} (s)")
 
-#     return ot.bregman.sinkhorn_knopp(a,b,M, reg  = 1/eps, verbose = True)
+    return 
