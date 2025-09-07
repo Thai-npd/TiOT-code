@@ -16,9 +16,9 @@ import time
 
 eps_global = 0.01
 w_global = 10
-k_global = 20
+freq_global = 10
 def eTiOT(X1, X2):
-    return TiOT_lib.eTiOT(X1,X2, eps=eps_global, freq=k_global)[0]
+    return TiOT_lib.eTiOT(X1,X2, eps=eps_global, freq=freq_global)[0]
 
 def eTAOT(X1, X2):
     return TiOT_lib.eTAOT(X1,X2, w = w_global, eps = eps_global)[0]
@@ -137,18 +137,18 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True):
     eps_list = [0.01*i for i in range(1,11)]
     #eps_list = [0.005*i for i in range(1,21)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
-    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + '_new_' + ".pdf")
-    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '_new_' + '.csv')
+    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + '_freq10_'+ 'TiOTonly'  + ".pdf")
+    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + '_freq10_'  + 'TiOTonly'  +'.csv')
     if RUN :
         data = process_data(dataset_name = dataset_name)
         w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
         w_list_name = [r'\omega_{\text{grid}} \;/\; 5', r'\omega_{\text{grid}}', r'\omega_{\text{grid}} \times 5']
-        alg_names = ["eTiOT"]  +  [fr"eTAOT$(\omega = {w})$" for w in w_list_name]
+        alg_names = ["eTiOT"] #  +  [fr"eTAOT$(\omega = {w})$" for w in w_list_name]
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
         for eps in eps_list:
             results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = None))
-            for i in range(len(w_list)):
-                results[fr"eTAOT$(\omega = {w_list_name[i]})$"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w_list[i]))
+            # for i in range(len(w_list)):
+            #     results[fr"eTAOT$(\omega = {w_list_name[i]})$"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w_list[i]))
 
         save_result(results, result_file)
         plot_results(results, plot_file)
@@ -159,20 +159,21 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True):
 if __name__ == "__main__":
     # ===> Tier 1 
 
-    experiment_kNN("SonyAIBORobotSurface1", 2)
+    # experiment_kNN("SonyAIBORobotSurface1", 2)
     experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_kNN("ProximalPhalanxTW", 0.7)
-    experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
-    experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
     # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
-    # experiment_kNN('DistalPhalanxTW', 0.5 )
-    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
+    # experiment_kNN("ProximalPhalanxTW", 0.7)
+    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
+    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
+    experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
     # experiment_kNN('MiddlePhalanxTW', 0.4)
     # experiment_kNN("CBF", 1)
     # experiment_kNN('SwedishLeaf',0.9) 
-    # experiment_kNN('Adiac',0.1) 
+    experiment_kNN('Adiac',0.1) 
     
     # ==> New data
+    # experiment_kNN('DistalPhalanxTW', 0.5 )
+    # experiment_kNN('ProximalPhalanxOutlineAgeGroup', 0.1)
     # experiment_kNN("SonyAIBORobotSurface2", 10)
     # experiment_kNN('Coffee', 2 )
     # experiment_kNN('Plane', 0.5)
@@ -189,7 +190,6 @@ if __name__ == "__main__":
     # experiment_kNN('Trace', 0.3)
     
 
-    # experiment_kNN('ProximalPhalanxOutlineAgeGroup', 0.1)
     # experiment_kNN("ECG200", 3)
     # experiment_kNN('ECGFiveDays', 5)
     # experiment_kNN('TwoLeadECG', 0.1)
