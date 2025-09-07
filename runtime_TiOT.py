@@ -118,17 +118,17 @@ def gaussian_mixture_timeseries(length, n_components=3, weights=None, means=None
 
 def main():
     RUN = True
-    dataset_name = 'PigCVP' # PigCVP Rock
+    dataset_name = 'Gaussian' # PigCVP, Rock
     #lengths = [100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
-    lengths = [100* i for i in range(1, 11)] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
+    lengths = [1000, 2000, 4000, 7000, 10000] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
     metrics = [TiOT, TAOT, eTiOT, eTAOT]
     result_file = os.path.join("runningtime_data", f"Results runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).csv")
     plot_file = os.path.join("runningtime_data", f"Plot runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).pdf")
 
     if RUN:
-        X1, X2 = process_data(dataset_name, start1=0, start2=10, numpoint=1)
-        X1  = gaussian_mixture_timeseries(2000, n_components=100, random_state=0).reshape(1,-1)
-        X2 = gaussian_mixture_timeseries(2000, n_components=100, random_state=1).reshape(1,-1)
+        #X1, X2 = process_data(dataset_name, start1=0, start2=10, numpoint=1)
+        X1  = gaussian_mixture_timeseries(20000, n_components=200, random_state=0).reshape(1,-1)
+        X2 = gaussian_mixture_timeseries(20000, n_components=200, random_state=1).reshape(1,-1)
         print(X1.shape)
         results = combine_runtimes(X1, X2, metrics, lengths)
         save_result(results, result_file)
