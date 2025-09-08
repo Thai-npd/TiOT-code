@@ -17,9 +17,9 @@ from sklearn.model_selection import KFold
 
 eps_global = 0.01
 w_global = 10
-k_global = 20
+freq_global = 2
 def eTiOT(X1, X2):
-    return TiOT_lib.eTiOT(X1,X2, eps=eps_global, freq=k_global)[0]
+    return TiOT_lib.eTiOT(X1,X2, eps=eps_global, freq=freq_global)[0]
 
 def eTAOT(X1, X2):
     return TiOT_lib.eTAOT(X1,X2, w = w_global, eps = eps_global)[0]
@@ -118,7 +118,7 @@ def kNN(dataset_name, data, metric_name , eps_list , w ):
     print(f"After cross validation eps_best = {eps_best} with average error {error_best}")
     knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
     knn.fit(X_train, Y_train)
-    with multiprocessing.Pool(64) as pool:
+    with multiprocessing.Pool(32) as pool:
         y_pred = list(tqdm(pool.imap(knn.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
     pool.close()
     accuracy = accuracy_score(Y_test, y_pred)
@@ -156,15 +156,16 @@ def read_result(result_file):
     return results
 
 def experiment_kNN(dataset_name, w_TAOT, RUN = True):
-    eps_list = [0.005*i for i in range(1,21)]
+    #eps_list = [0.005*i for i in range(1,21)]
+    eps_list = [0.01*i for i in range(1,11)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
-    plot_file = os.path.join("kfold_kNN_data","plots", "Comparison on " + dataset_name + eps_name  + '_new_' + ".pdf")
-    result_file = os.path.join("kfold_kNN_data", "saved_results","Results on " + dataset_name + eps_name +  '_new_' + '.csv')
+    plot_file = os.path.join("kfold_kNN_data","plots", "Comparison on " + dataset_name + eps_name  + f'_freq{freq_global}_' + 'TiOTonly' + ".pdf")
+    result_file = os.path.join("kfold_kNN_data", "saved_results","Results on " + dataset_name + eps_name +  f'_freq{freq_global}_'  + 'TiOTonly' + '.csv')
     if RUN :
         data = process_data(dataset_name = dataset_name)
         results = {**{'eps': eps_list}}
         results['eTiOT'] = kNN(dataset_name, data, metric_name='eTiOT', eps_list= eps_list, w = None)
-        results['eTAOT'] = kNN(dataset_name, data, metric_name='oriTAOT', eps_list= eps_list, w = w_TAOT)
+        #results['eTAOT'] = kNN(dataset_name, data, metric_name='oriTAOT', eps_list= eps_list, w = w_TAOT)
         results['eps'].append('Final error')
 
         save_result(results, result_file)
@@ -176,20 +177,21 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True):
 if __name__ == "__main__":
     # ===> Tier 1 
 
-    experiment_kNN("SonyAIBORobotSurface1", 2)
-    experiment_kNN("ProximalPhalanxTW", 0.7)
-    experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
+    # experiment_kNN("SonyAIBORobotSurface1", 2)
     experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
     # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
-    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
+    # experiment_kNN("ProximalPhalanxTW", 0.7)
+    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
+    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
+    experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
     # experiment_kNN('MiddlePhalanxTW', 0.4)
     # experiment_kNN("CBF", 1)
     # experiment_kNN('SwedishLeaf',0.9) 
-    # experiment_kNN('Adiac',0.1) 
+    experiment_kNN('Adiac',0.1) 
 
     # ==> New data
     # experiment_kNN('DistalPhalanxTW', 0.5 )
+    # experiment_kNN('ProximalPhalanxOutlineAgeGroup', 0.1)
     # experiment_kNN('Coffee', 2 )
     # experiment_kNN('Plane', 0.5)
     # experiment_kNN('BeetleFly', 0.3)

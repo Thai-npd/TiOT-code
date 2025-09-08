@@ -225,7 +225,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
         h = b/(K.T @ g)
         if curIter % freq ==0 :
             w,  K = solver(g,h, w, subprob_tol= subprob_tol)
-        if curIter % freq == 0 and np.sum(np.abs(g * (K @ h) - a)) < tolerance:
+        if curIter % 20 == 0 and np.sum(np.abs(g * (K @ h) - a)) < tolerance:
             if verbose == True: 
                 print(f"TiOT-BCD Algorithm converges after {curIter+1} iterations")
             break
@@ -271,7 +271,7 @@ def TAOT(x, y, a = None, b = None, w = 0.5, costmatrix = costmatrix1, verbose = 
     else:
         return distance, transport_plan
 
-def eTAOT(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix1,  maxIter=5000, tolerance=0.005, freq = 20, verbose = False, timing = False):
+def eTAOT(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix1,  maxIter=5000, tolerance=0.005, verbose = False, timing = False):
     """
     Solves the entropic Time Adaptive Optimal Transport (eTAOT) problem between two empirical distributions.
 
@@ -303,7 +303,7 @@ def eTAOT(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix
         g = a/ (K @ h)
         h = b/(K.T @ g)
         
-        if curIter % freq == 0:
+        if curIter % 20 == 0:
             criterion = np.sum(np.abs(g * (K @ h) - a))
             if criterion < tolerance:
                 if verbose == True: 
