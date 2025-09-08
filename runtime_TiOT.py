@@ -4,7 +4,7 @@ from collections import defaultdict
 import seaborn as sns
 import matplotlib.pyplot as plt
 import TiOT_lib
-from TiOT_lib import TiOT,  TAOT
+from TiOT_lib import TiOT,  TAOT, sinkhorn
 import os
 import time
 import csv
@@ -25,10 +25,16 @@ def process_data(dataset_name, start1, start2, numpoint ):
     return X1, X2
 
 def eTiOT(x,y, verbose = False, timing  = True):
-    return TiOT_lib.eTiOT(x, y, eps=0.1, freq=20, verbose=verbose, timing=timing)
+    return TiOT_lib.eTiOT(x, y, eps=0.1, freq=5, verbose=verbose, timing=timing)
+
+def eTiOTh(x,y, verbose = False, timing  = True):
+    return TiOT_lib.eTiOTh(x, y, eps=0.1, freq=5, verbose=verbose, timing=timing)
 
 def eTAOT(x,y, verbose = False, timing  = True):
-    return TiOT_lib.eTAOT(x, y, eps=0.1, freq=20, verbose=verbose, timing=timing)
+    return TiOT_lib.eTAOT(x, y, eps=0.1,  verbose=verbose, timing=timing)
+
+def sinkhorn(x,y, verbose = False, timing  = True):
+    return TiOT_lib.sinkhorn(x,y, eps=0.1)
 
 def get_runtime(x,y, metric):
     outputs = metric(x,y, verbose = True, timing = True)
@@ -52,7 +58,7 @@ def combine_runtimes(X1, X2, metrics, lengths):
             print(f"  ===> Done algorithm {metric.__name__} ")
     return results
 
-def plot_runtime(results, plot_file):
+def plot_runtime(results, plot_file, logscale):
     lengths = results['len']
     metric_names = [k for k in results.keys() if k != 'len']
     sns.set(style="whitegrid", context="paper")
@@ -62,7 +68,9 @@ def plot_runtime(results, plot_file):
     for name in metric_names:
         plt.plot(lengths[:len(results[name])], results[name], label = name, linewidth=1.75, marker = markers[i])
         i+=1
-    plt.yscale("log")    
+    if logscale:
+        plt.yscale("log")  
+        plt.xscale("log")  
     plt.xlabel("Series' lengths", fontsize = 14)
     plt.ylabel("Running time (s)", fontsize = 14)
     plt.legend()
@@ -118,24 +126,29 @@ def gaussian_mixture_timeseries(length, n_components=3, weights=None, means=None
 
 def main():
     RUN = True
+    logscale = False
+    if logscale:
+        logscale_str = '_logscale'
+    else:
+        logscale_str = ""
     dataset_name = 'Gaussian' # PigCVP, Rock
     #lengths = [100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
-    lengths = [1000, 2000, 4000, 7000, 10000] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
-    metrics = [TiOT, TAOT, eTiOT, eTAOT]
-    result_file = os.path.join("runningtime_data", f"Results runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).csv")
-    plot_file = os.path.join("runningtime_data", f"Plot runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]}).pdf")
+    lengths = [100, 500, 1000, 2000, 3000] #
+    metrics = [TiOT, TAOT, eTiOT, eTiOTh, eTAOT]
+    result_file = os.path.join("runningtime_data", f"Results runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]})"  + ".csv")
+    plot_file = os.path.join("runningtime_data", f"Plot runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]})" + logscale_str + ".pdf")
 
     if RUN:
         #X1, X2 = process_data(dataset_name, start1=0, start2=10, numpoint=1)
-        X1  = gaussian_mixture_timeseries(20000, n_components=200, random_state=0).reshape(1,-1)
-        X2 = gaussian_mixture_timeseries(20000, n_components=200, random_state=1).reshape(1,-1)
+        X1  = gaussian_mixture_timeseries(10000, n_components=200, random_state=0).reshape(1,-1)
+        X2 = gaussian_mixture_timeseries(10000, n_components=200, random_state=1).reshape(1,-1)
         print(X1.shape)
         results = combine_runtimes(X1, X2, metrics, lengths)
         save_result(results, result_file)
-        plot_runtime(results, plot_file)
+        plot_runtime(results, plot_file, logscale)
     else:
         results = read_result(result_file)
-        plot_runtime(results, plot_file)
+        plot_runtime(results, plot_file, logscale)
 
 
 main()
