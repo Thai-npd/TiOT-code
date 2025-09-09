@@ -233,7 +233,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
     if verbose == True:
         if curIter == maxIter: print(f"TiOT algorithm did not stop after {maxIter} iterations")
     C = w*value_diff + (1-w)*time_diff
-    transport_plan = np.diag(g) @ K @ np.diag(h)
+    transport_plan = g.reshape((-1, 1)) * K * h.reshape((1, -1)) # np.diag(g) @ K @ np.diag(h)
     end = time.perf_counter()
     if timing == True:
         return np.sum(C * transport_plan), transport_plan, w, end - start
@@ -312,7 +312,7 @@ def eTAOT(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix
         curIter += 1
     if verbose == True:
         if curIter == maxIter: print(f"TAOT algorithm did not stop after {maxIter} iterations")
-    transport_plan = np.diag(g) @ K @ np.diag(h)
+    transport_plan = g.reshape((-1, 1)) * K * h.reshape((1, -1))
     distance = np.sum(M * transport_plan)
     end = time.perf_counter()
     if timing == True:
@@ -327,9 +327,9 @@ def sinkhorn(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmat
     start = time.perf_counter()
     if a == None: a = np.ones(n) / n
     if b == None: b = np.ones(m) / m
-    transport_plan = ot.bregman.sinkhorn_knopp(a,b,M, reg  = 1/eps, verbose = True)
+    transport_plan, log = ot.bregman.sinkhorn_knopp(a,b,M, reg  = eps, verbose = True, log = True)
     distance = np.sum(M * transport_plan)
+    print(type(M), type(a), type(b), type(log['u']))
     end = time.perf_counter()
-    print(f"Complete solving TiOT problem after {end - start} (s)")
 
-    return 
+    return distance, transport_plan, end - start
