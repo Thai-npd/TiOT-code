@@ -137,18 +137,18 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True):
     eps_list = [0.01*i for i in range(1,11)]
     #eps_list = [0.005*i for i in range(1,21)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
-    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + f'_freq{freq_global}_'+ 'TiOTonly'  + ".pdf")
-    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + f'_freq{freq_global}_'  + 'TiOTonly'  +'.csv')
+    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + f'_freq{freq_global}_'+  ".pdf")
+    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + f'_freq{freq_global}_'  + '.csv')
     if RUN :
         data = process_data(dataset_name = dataset_name)
         w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
         w_list_name = [r'\omega_{\text{grid}} \;/\; 5', r'\omega_{\text{grid}}', r'\omega_{\text{grid}} \times 5']
-        alg_names = ["eTiOT"] #  +  [fr"eTAOT$(\omega = {w})$" for w in w_list_name]
+        alg_names = ["eTiOT"]   +  [fr"eTAOT$(\omega = {w})$" for w in w_list_name]
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
         for eps in eps_list:
             results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = None))
-            # for i in range(len(w_list)):
-            #     results[fr"eTAOT$(\omega = {w_list_name[i]})$"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w_list[i]))
+            for i in range(len(w_list)):
+                results[fr"eTAOT$(\omega = {w_list_name[i]})$"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w_list[i]))
 
         save_result(results, result_file)
         plot_results(results, plot_file)
@@ -159,13 +159,13 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True):
 if __name__ == "__main__":
     # ===> Tier 1 
 
-    # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
-    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
-    experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
-    experiment_kNN("ProximalPhalanxTW", 0.7)
-    experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
-    experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
-    experiment_kNN('MiddlePhalanxTW', 0.4)
+    # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1, RUN=False)
+    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, RUN = False)
+    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2, RUN = False)
+    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5, RUN = False)
+    # experiment_kNN('MiddlePhalanxTW', 0.4, RUN = False)
+    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7, RUN = False)
+    experiment_kNN("ProximalPhalanxTW", 0.7, RUN = False)
     # experiment_kNN("SonyAIBORobotSurface1", 2)
     # experiment_kNN("CBF", 1)
     # experiment_kNN('SwedishLeaf',0.9) 

@@ -70,7 +70,7 @@ def my_cross_val_score(model, X, y, cv=3):
     scores : list of float
         Accuracy scores for each fold.
     """
-    kf = KFold(n_splits=cv, shuffle=True, random_state=0)
+    kf = KFold(n_splits=cv, shuffle=True, random_state=RANDOM_STATE)
     scores = []
 
     for train_idx, test_idx in kf.split(X):
@@ -154,18 +154,19 @@ def read_result(result_file):
     df = pd.read_csv(result_file)
     results = df.to_dict(orient='list')
     return results
-
+    
+RANDOM_STATE = 1
 def experiment_kNN(dataset_name, w_TAOT, RUN = True):
     #eps_list = [0.005*i for i in range(1,21)]
     eps_list = [0.01*i for i in range(1,11)]
-    eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
-    plot_file = os.path.join("kfold_kNN_data","plots", "Comparison on " + dataset_name + eps_name  + f'_freq{freq_global}_' + 'TiOTonly' + ".pdf")
-    result_file = os.path.join("kfold_kNN_data", "saved_results","Results on " + dataset_name + eps_name +  f'_freq{freq_global}_'  + 'TiOTonly' + '.csv')
+    eps_name = f" ({eps_list[0]} to {eps_list[-1]})"  
+    plot_file = os.path.join("kfold_kNN_data","plots", "Comparison on " + dataset_name + eps_name  + f'_freq{freq_global}_' + f"random{RANDOM_STATE}" + ".pdf")
+    result_file = os.path.join("kfold_kNN_data", "saved_results","Results on " + dataset_name + eps_name +  f'_freq{freq_global}_'  + f"random{RANDOM_STATE}" + '.csv')
     if RUN :
         data = process_data(dataset_name = dataset_name)
         results = {**{'eps': eps_list}}
         results['eTiOT'] = kNN(dataset_name, data, metric_name='eTiOT', eps_list= eps_list, w = None)
-        #results['eTAOT'] = kNN(dataset_name, data, metric_name='oriTAOT', eps_list= eps_list, w = w_TAOT)
+        results['eTAOT'] = kNN(dataset_name, data, metric_name='oriTAOT', eps_list= eps_list, w = w_TAOT)
         results['eps'].append('Final error')
 
         save_result(results, result_file)
@@ -178,7 +179,7 @@ if __name__ == "__main__":
     # ===> Tier 1 
 
     experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
+    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
     # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
     # experiment_kNN("ProximalPhalanxTW", 0.7)
     # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
