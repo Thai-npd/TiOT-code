@@ -109,7 +109,7 @@ def kNN(dataset_name, data, metric_name , eps_list , w ):
         eps_global = eps
         print(f"Start cross validation with metric = {metric_name}, eps = {eps}")
         knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
-        error = my_cross_val_score(knn, X_train, Y_train, cv = 3)
+        error = my_cross_val_score(knn, X_train, Y_train, cv = NumFold)
         errors.append(error)
         if error_best >= error:
             eps_best = eps
@@ -155,13 +155,14 @@ def read_result(result_file):
     results = df.to_dict(orient='list')
     return results
     
-RANDOM_STATE = 2
+RANDOM_STATE = 5
+NumFold = 5
 def experiment_kNN(dataset_name, w_TAOT, RUN = True):
     #eps_list = [0.005*i for i in range(1,21)]
     eps_list = [0.01*i for i in range(1,11)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"  
-    plot_file = os.path.join("kfold_kNN_data","plots", "Comparison on " + dataset_name + eps_name  + f'_freq{freq_global}_' + f"random{RANDOM_STATE}" + ".pdf")
-    result_file = os.path.join("kfold_kNN_data", "saved_results","Results on " + dataset_name + eps_name +  f'_freq{freq_global}_'  + f"random{RANDOM_STATE}" + '.csv')
+    plot_file = os.path.join("kfold_kNN_data","plots", "Comparison on " + dataset_name + eps_name  + f'_freq{freq_global}_' + f"random{RANDOM_STATE}" + f'_fold{NumFold}_' + ".pdf")
+    result_file = os.path.join("kfold_kNN_data", "saved_results","Results on " + dataset_name + eps_name +  f'_freq{freq_global}_'  + f"random{RANDOM_STATE}" + f'_fold{NumFold}_' + '.csv')
     if RUN :
         data = process_data(dataset_name = dataset_name)
         results = {**{'eps': eps_list}}
@@ -185,7 +186,7 @@ if __name__ == "__main__":
     # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
     # experiment_kNN("ProximalPhalanxTW", 0.7)
     # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
-    experiment_kNN("SonyAIBORobotSurface1", 2)
+    # experiment_kNN("SonyAIBORobotSurface1", 2)
     # experiment_kNN("CBF", 1)
     # experiment_kNN('SwedishLeaf',0.9) 
     
