@@ -25,13 +25,10 @@ def process_data(dataset_name, start1, start2, numpoint ):
     return X1, X2
 
 def eTiOT(x,y, verbose = False, timing  = True):
-    return TiOT_lib.eTiOT(x, y, eps=0.1, freq=5, verbose=verbose, timing=timing)
-
-def eTiOTh(x,y, verbose = False, timing  = True):
-    return TiOT_lib.eTiOTh(x, y, eps=0.1, freq=5, verbose=verbose, timing=timing)
+    return TiOT_lib.eTiOT(x, y, eps=0.1, freq=20, eta=2,  verbose=verbose, timing=timing)
 
 def eTAOT(x,y, verbose = False, timing  = True):
-    return TiOT_lib.eTAOT(x, y, eps=0.1,  verbose=verbose, timing=timing)
+    return TiOT_lib.eTAOT(x, y, eps=0.1, freq=1, verbose=verbose, timing=timing)
 
 def sinkhorn(x,y, verbose = False, timing  = True):
     return TiOT_lib.sinkhorn(x,y, eps=0.1)
@@ -76,7 +73,7 @@ def plot_runtime(results, plot_file, logscale):
     plt.legend()
     plt.tight_layout()
     plt.savefig(plot_file, dpi=300)  # High-resolution
-    plt.show()
+    #plt.show()
 
 def save_result(results, result_file):
     df = pd.DataFrame(results)
@@ -133,8 +130,8 @@ def main():
         logscale_str = ""
     dataset_name = 'Gaussian' # PigCVP, Rock
     #lengths = [100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100] #100, 200, 300, 400, 500, 600, 700, 900, 1100, 1300, 1500, 1800, 2100, 2400, 2800
-    lengths = [100, 500, 1000, 2000, 3000] #
-    metrics = [TiOT, TAOT, eTiOT, eTiOTh, eTAOT]
+    lengths = [ 2000] #
+    metrics = [ eTiOT,  eTAOT] #TiOT, TAOT,
     result_file = os.path.join("runningtime_data", f"Results runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]})"  + ".csv")
     plot_file = os.path.join("runningtime_data", f"Plot runtime_graph {dataset_name}(size {lengths[0]} to {lengths[-1]})" + logscale_str + ".pdf")
 
@@ -142,7 +139,6 @@ def main():
         #X1, X2 = process_data(dataset_name, start1=0, start2=10, numpoint=1)
         X1  = gaussian_mixture_timeseries(10000, n_components=200, random_state=0).reshape(1,-1)
         X2 = gaussian_mixture_timeseries(10000, n_components=200, random_state=1).reshape(1,-1)
-        print(X1.shape)
         results = combine_runtimes(X1, X2, metrics, lengths)
         save_result(results, result_file)
         plot_runtime(results, plot_file, logscale)

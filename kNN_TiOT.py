@@ -16,9 +16,10 @@ import time
 
 eps_global = 0.01
 w_global = 10
-freq_global = 3
+freq_global = 20
+eta_global = 0.01
 def eTiOT(X1, X2):
-    return TiOT_lib.eTiOT(X1,X2, eps=eps_global, freq=freq_global)[0]
+    return TiOT_lib.eTiOT(X1,X2, eps=eps_global, freq=freq_global, eta=eta_global)[0]
 
 def eTAOT(X1, X2):
     return TiOT_lib.eTAOT(X1,X2, w = w_global, eps = eps_global)[0]
@@ -50,41 +51,42 @@ def process_data(dataset_name ):
 
     return [X_train, Y_train, X_test, Y_test]
 
-def get_w_opt(X_train, Y_train):
-    np.random.seed(0)
-    # unique_labels = np.unique(Y_train)
-    # label_1, label_2 = unique_labels[0], unique_labels[1]
+# def get_w_opt(X_train, Y_train):
+#     np.random.seed(0)
+#     # unique_labels = np.unique(Y_train)
+#     # label_1, label_2 = unique_labels[0], unique_labels[1]
 
-    # dist_min = np.inf
-    # w_opt = 0
-    # label_1_index = np.where(Y_train == label_1)[0]
-    # label_2_index = np.where(Y_train == label_2)[0]
-    # n_pairs = min(len(label_1_index), len(label_2_index))
-    # for _ in range(n_pairs):
-    #     idx1 = np.random.choice(label_1_index)
-    #     idx2 = np.random.choice(label_2_index)
-    #     distance, plan, w = TiOT_lib.eTiOT(X_train[idx1], X_train[idx2], eps=eps, freq=k_global)
-    #     if dist_min > distance:
-    #         dist_min = distance
-    #         w_opt = w
-    # print(f"===> w_opt = {w_opt}")
+#     # dist_min = np.inf
+#     # w_opt = 0
+#     # label_1_index = np.where(Y_train == label_1)[0]
+#     # label_2_index = np.where(Y_train == label_2)[0]
+#     # n_pairs = min(len(label_1_index), len(label_2_index))
+#     # for _ in range(n_pairs):
+#     #     idx1 = np.random.choice(label_1_index)
+#     #     idx2 = np.random.choice(label_2_index)
+#     #     distance, plan, w = TiOT_lib.eTiOT(X_train[idx1], X_train[idx2], eps=eps, freq=k_global)
+#     #     if dist_min > distance:
+#     #         dist_min = distance
+#     #         w_opt = w
+#     # print(f"===> w_opt = {w_opt}")
 
-    dist_min = np.inf
-    w_opt = 0
-    all_pairs = [(i, j) for i in range(len(Y_train)) for j in range(len(Y_train)) if i < j and Y_train[i] != Y_train[j]]
-    selected_pairs = [all_pairs[idx] for idx in np.random.choice(len(all_pairs), size=len(Y_train), replace=False)]
-    for idx1, idx2 in selected_pairs:
-        distance, plan, w = TiOT_lib.eTiOT(X_train[idx1], X_train[idx2], eps=0.01, freq=5)
-        if dist_min > distance:
-            dist_min = distance
-            w_opt = w
-    print(f"===> w_opt = {w_opt}")
-    return w_opt
+#     dist_min = np.inf
+#     w_opt = 0
+#     all_pairs = [(i, j) for i in range(len(Y_train)) for j in range(len(Y_train)) if i < j and Y_train[i] != Y_train[j]]
+#     selected_pairs = [all_pairs[idx] for idx in np.random.choice(len(all_pairs), size=len(Y_train), replace=False)]
+#     for idx1, idx2 in selected_pairs:
+#         distance, plan, w = TiOT_lib.eTiOT(X_train[idx1], X_train[idx2], eps=0.01, freq=5)
+#         if dist_min > distance:
+#             dist_min = distance
+#             w_opt = w
+#     print(f"===> w_opt = {w_opt}")
+#     return w_opt
 
-def kNN(dataset_name, data, metric_name , eps , w ):
+def kNN(dataset_name, data, metric_name , eps , w, eta ):
     global w_global, eps_global
     w_global = w
     eps_global = eps
+    eta_global = eta
     if metric_name == "oriTAOT":
         metric = oriTAOT
     elif metric_name == "eTiOT":
@@ -133,7 +135,7 @@ def read_result(result_file):
     results = df.to_dict(orient='list')
     return results
 
-def experiment_kNN(dataset_name, w_TAOT, RUN = True):
+def experiment_kNN(dataset_name, w_TAOT, eta , RUN = True):
     eps_list = [0.01*i for i in range(1,11)]
     #eps_list = [0.005*i for i in range(1,21)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
@@ -146,7 +148,7 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True):
         alg_names = ["eTiOT"]  # +  [fr"eTAOT$(\omega = {w})$" for w in w_list_name]
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
         for eps in eps_list:
-            results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = None))
+            results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = None, eta=eta))
             # for i in range(len(w_list)):
             #     results[fr"eTAOT$(\omega = {w_list_name[i]})$"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w_list[i]))
 
@@ -159,16 +161,16 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True):
 if __name__ == "__main__":
     # ===> Tier 1 
 
-    # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1, RUN=False)
-    experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
-    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2, RUN = False)
-    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5, RUN = False)
-    # experiment_kNN('MiddlePhalanxTW', 0.4, RUN = False)
-    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7, RUN = False)
-    # experiment_kNN("ProximalPhalanxTW", 0.7, RUN = False)
-    # experiment_kNN("SonyAIBORobotSurface1", 2)
-    # experiment_kNN("CBF", 1)
-    # experiment_kNN('SwedishLeaf',0.9) 
+    # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1, 0.5)
+    experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, 0.1)
+    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2, 0.1)
+    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5, 1)
+    # experiment_kNN('MiddlePhalanxTW', 0.4, 1)
+    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7, 1)
+    # experiment_kNN("ProximalPhalanxTW", 0.7, 1)
+    # experiment_kNN("SonyAIBORobotSurface1", 2, 0.01)
+    # experiment_kNN("CBF", 1, 0.01)
+    # experiment_kNN('SwedishLeaf',0.9, 0.01) 
     
     # experiment_kNN('Adiac',0.1) 
     # ==> New data
