@@ -117,7 +117,7 @@ def TiOT(x, y, a = None, b = None, detail_mode = False, verbose = False, timing 
         else:
             return -res.fun, TAOT(x,y, w = res.x[-1])[1], res.x[-1]
 
-def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.005, solver = 'PGD', eta = 10**-2, init_stepsize = True, submax_iter = 50,  subprob_tol = 10**-7, freq = 1, verbose = False, timing = False):
+def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.005, solver = 'PGD', eta = 10**-2, init_stepsize = True, submax_iter = 50,  subprob_tol = 10**-7, freq = 20, verbose = False, timing = False):
     """
     Solves the entropic Time-integrated Optimal Transport (eTiOT) problem use block coordinate descent.
 
@@ -213,8 +213,6 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
             possible_stepsize = 1/df2w
             if possible_stepsize >= 10:
                 return possible_stepsize/20
-            elif possible_stepsize >= 0.1:
-                return possible_stepsize/10
             else:
                 return possible_stepsize/10
         if init_stepsize:
@@ -242,25 +240,24 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
     else:
         solver = PGD
     while curIter < maxIter:
-        g_old = g
-        h_old = h
+        # g_old = g
+        # h_old = h
         g = a/ (K @ h)
         h = b/(K.T @ g)
         if curIter % freq ==0 :
             w,  K = solver(g,h, w, subprob_tol= subprob_tol, maxIter=submax_iter, eta=eta, init_stepsize=init_stepsize)
         if np.any(np.isnan(g)) or np.any(np.isnan(h)) or np.linalg.norm(g) == 0:
             warnings.warn(f"Warning: numerical errors at iteration {curIter}: consider larger epsilon or smaller stepsize(current eta = {eta})")
-            g = g_old
-            h = h_old
+            # g = g_old
+            # h = h_old
             break
-        if (curIter) % freq == 0 and np.sum(np.abs(g * (K @ h) - a)) < tolerance: # np.linalg.norm(g - g_old) / np.linalg.norm(g_old)
+        if curIter % freq == 0 and np.sum(np.abs(g * (K @ h) - a)) < tolerance: # np.linalg.norm(g - g_old) / np.linalg.norm(g_old)
             # print(f"Stop where {np.sum(np.abs(g * (K @ h) - a))}")
             if verbose >= 1:
                 print(f"TiOT-BCD Algorithm converges after {curIter+1} iterations ")
             break
         curIter += 1
-    if verbose >= 1:
-        if curIter == maxIter: print(f"TiOT algorithm did not stop after {maxIter} iterations")
+    if curIter == maxIter and verbose >= 1: print(f"TiOT algorithm did not stop after {maxIter} iterations")
     C = w*value_diff + (1-w)*time_diff
     transport_plan = g.reshape((-1, 1)) * K * h.reshape((1, -1)) # np.diag(g) @ K @ np.diag(h)
     end = time.perf_counter()
@@ -329,10 +326,10 @@ def eTAOT(x, y, a = None, b = None, w = 0.5, eps = 0.01, costmatrix = costmatrix
     h = np.ones(m) / m
     curIter = 0
     while curIter < maxIter:
-        g_old = g
+        #g_old = g
         g = a/ (K @ h)
         h = b/(K.T @ g)
-        if (curIter - 1) % freq == 0 and np.linalg.norm(g - g_old) / np.linalg.norm(g_old) < tolerance:
+        if  curIter % freq == 0 and np.sum(np.abs(g * (K @ h) - a)) < tolerance:
             if verbose >= 1: 
                 print(f"TAOT-BCD Algorithm converges after {curIter+1} iterations")
             break
