@@ -185,6 +185,8 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
         K = np.exp(-C/eps)
         return w, K
     
+
+
     def PGD(g,h, w, subprob_tol = 10**-7, maxIter = 100, eta = 10**-2):
         def f(w):
             C = w*value_diff + (1-w)*time_diff
@@ -195,20 +197,32 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
             nC =  w * TV - time_diff
             K = np.exp(nC/(eps))
             return g.T @ ((TV * K) @ h)
-        
+        def df2w(w):
+            nC =  w * TV - time_diff 
+            K = np.exp(nC/(eps))
+            df2 = (1/eps) * g.T @ (((TV**2) * K) @ h)
+            return df2
         def proj(w):
             if w > 1:
                 w = 1
             elif w < 0:
                 w = 0
             return w 
-
+        def init_stepsize(df2w):
+            possible_stepsize = 1/df2w
+            if possible_stepsize >= 10:
+                return possible_stepsize/20
+            elif possible_stepsize >= 1:
+                return possible_stepsize/10
+            else:
+                return 0.01
+        eta = init_stepsize(df2w(w))
         for i in range(maxIter):
             w_prev = w
             w = proj(w - eta*df(w))
             if np.abs(w-w_prev) < subprob_tol:
                 break
-        #print(f"Total subiteration needed for PGD: {i} with df = {df(w)}")
+        print(f"Total subiteration needed for PGD: {i} with df = {df(w)}")
         if i == maxIter: print(f"PGD Algorithm does not converge after {i} iterations")
         C = w*value_diff + (1-w)*time_diff
         K = np.exp(-C/eps)
