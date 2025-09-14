@@ -137,8 +137,7 @@ def read_result(result_file):
 
 def experiment_kNN(dataset_name, w_TAOT, eta , RUN = True):
     eps_list = [0.01*i for i in range(1,11)]
-    #eps_list = [0.005*i for i in range(1,21)]
-    eps_list = [0.01*i for i in range(5,11)]
+    # eps_list = [0.01*i for i in range(5,11)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
     plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + f'_freq{freq_global}_'+ f"_eta{eta}" + '_TiOTonly_' + ".pdf")
     result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + f'_freq{freq_global}_'  + f"_eta{eta}" + '_TiOTonly_' + '.csv')
@@ -162,23 +161,15 @@ def experiment_kNN(dataset_name, w_TAOT, eta , RUN = True):
 if __name__ == "__main__":
     # ===> Tier 1 
 
+    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, 0.1)
     # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1, 0.5)
-    experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, 0.1)
-    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, 0.2)
-    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, 0.3)
-    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, 0.4)
-    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, 0.6)
-    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, 0.7)
-    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, 0.9)
-    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, 0.8)
-    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4, 1)
     # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2, 0.1)
-    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5, 1)
     # experiment_kNN('MiddlePhalanxTW', 0.4, 1)
-    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7, 1)
-    # experiment_kNN("ProximalPhalanxTW", 0.7, 1)
-    # experiment_kNN("SonyAIBORobotSurface1", 2, 0.01)
-    # experiment_kNN("CBF", 1, 0.01)
+    experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5, 1)
+    experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7, 1)
+    experiment_kNN("ProximalPhalanxTW", 0.7, 1)
+    experiment_kNN("SonyAIBORobotSurface1", 2, 0.01)
+    experiment_kNN("CBF", 1, 0.01)
     # experiment_kNN('SwedishLeaf',0.9, 0.01) 
     
     # experiment_kNN('Adiac',0.1) 

@@ -117,7 +117,7 @@ def TiOT(x, y, a = None, b = None, detail_mode = False, verbose = False, timing 
         else:
             return -res.fun, TAOT(x,y, w = res.x[-1])[1], res.x[-1]
 
-def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.005, solver = 'PGD', eta = 10**-2, submax_iter = 500,  subprob_tol = 10**-7, freq = 1, verbose = False, timing = False):
+def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.005, solver = 'PGD', eta = 10**-2, submax_iter = 50,  subprob_tol = 10**-7, freq = 1, verbose = False, timing = False):
     """
     Solves the entropic Time-integrated Optimal Transport (eTiOT) problem use block coordinate descent.
 
@@ -188,7 +188,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
     
 
 
-    def PGD(g,h, w, subprob_tol = 10**-7, maxIter = 100, eta = 10**-2):
+    def PGD(g,h, w, subprob_tol = 10**-7, maxIter = 50, eta = 10**-2):
         def f(w):
             C = w*value_diff + (1-w)*time_diff
             K = np.exp(-C/eps)
@@ -213,7 +213,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
             possible_stepsize = 1/df2w
             if possible_stepsize >= 10:
                 return possible_stepsize/20
-            elif possible_stepsize >= 1:
+            elif possible_stepsize >= 0.1:
                 return possible_stepsize/10
             else:
                 return 0.01
@@ -224,11 +224,10 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
             w = proj(w - eta*dfw)
             if np.abs(w-w_prev) < subprob_tol:
                 break
-        print(f"Total subiteration needed for PGD: {i} with df = {df(w)}")
-        if i == maxIter: print(f"PGD Algorithm does not converge after {i} iterations")
+        #print(f"Total subiteration needed for PGD: {i} with df = {df(w)}")
         C = w*value_diff + (1-w)*time_diff
         K = np.exp(-C/eps)
-        if i == maxIter - 1: print(f"PGD Algorithm does not converge after {i} iterations with dfw = {dfw}")
+        if i == maxIter - 1 and verbose >= 1 : print(f"PGD Algorithm does not converge after {i} iterations with stepsize {eta} and dfw = {dfw}") # and verbose >= 1
         return w, K
 
     g, h, w = np.ones(n)/n , np.ones(m)/m , 0.5
@@ -236,7 +235,8 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
     start = time.perf_counter()
     K = np.exp(-C/eps)
     curIter = 0
-    if solver == 'newton': solver = newton
+    if solver == 'newton': 
+        solver = newton
     else:
         solver = PGD
     while curIter < maxIter:
@@ -251,7 +251,8 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
             g = g_old
             h = h_old
             break
-        if (curIter - 1) % freq == 0 and np.linalg.norm(g - g_old) / np.linalg.norm(g_old) < tolerance:
+        if (curIter) % freq == 0 and np.sum(np.abs(g * (K @ h) - a)) < tolerance: # np.linalg.norm(g - g_old) / np.linalg.norm(g_old)
+            # print(f"Stop where {np.sum(np.abs(g * (K @ h) - a))}")
             if verbose >= 1:
                 print(f"TiOT-BCD Algorithm converges after {curIter+1} iterations ")
             break
