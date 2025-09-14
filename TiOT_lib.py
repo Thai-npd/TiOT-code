@@ -216,7 +216,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
             elif possible_stepsize >= 0.1:
                 return possible_stepsize/10
             else:
-                return 0.01
+                return possible_stepsize/10
         eta = init_stepsize(df2w(w))
         for i in range(maxIter):
             w_prev = w
@@ -247,7 +247,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
         if curIter % freq ==0 :
             w,  K = solver(g,h, w, subprob_tol= subprob_tol, maxIter=submax_iter, eta=eta)
         if np.any(np.isnan(g)) or np.any(np.isnan(h)) or np.linalg.norm(g) == 0:
-            warnings.warn(f"Warning: numerical errors at iteration {curIter}: consider larger epsilon or smaller stepsize(eta)")
+            warnings.warn(f"Warning: numerical errors at iteration {curIter}: consider larger epsilon or smaller stepsize(current eta = {eta})")
             g = g_old
             h = h_old
             break
