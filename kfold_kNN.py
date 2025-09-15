@@ -17,7 +17,7 @@ from sklearn.model_selection import KFold
 
 eps_global = 0.01
 w_global = 10
-freq_global = 5
+freq_global = 20
 def eTiOT(X1, X2):
     return TiOT_lib.eTiOT(X1,X2, eps=eps_global, freq=freq_global)[0]
 
@@ -107,18 +107,18 @@ def kNN(dataset_name, data, metric_name , eps_list , w ):
     errors = []
     for eps in eps_list:
         eps_global = eps
-        print(f"Start cross validation with metric = {metric_name}, eps = {eps}")
         knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
         error = my_cross_val_score(knn, X_train, Y_train, cv = NumFold)
         errors.append(error)
-        if error_best >= error:
+        if error_best > error:
             eps_best = eps
             error_best = error
+        print(f"Complete cross validation with metric = {metric_name}, eps = {eps} : error = {error}")
     eps_global = eps_best
     print(f"After cross validation eps_best = {eps_best} with average error {error_best}")
     knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
     knn.fit(X_train, Y_train)
-    with multiprocessing.Pool(32) as pool:
+    with multiprocessing.Pool(64) as pool:
         y_pred = list(tqdm(pool.imap(knn.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
     pool.close()
     accuracy = accuracy_score(Y_test, y_pred)
@@ -155,13 +155,16 @@ def read_result(result_file):
     results = df.to_dict(orient='list')
     return results
     
-RANDOM_STATE = 5
-NumFold = 5
-def experiment_kNN(dataset_name, w_TAOT, RUN = True):
+RANDOM_STATE = 1
+NumFold = 3
+def experiment_kNN(dataset_name, w_TAOT, RUN = True, random = 1):
+    global RANDOM_STATE
+    RANDOM_STATE = random
     #eps_list = [0.005*i for i in range(1,21)]
     eps_list = [0.01*i for i in range(1,11)]
+    #eps_list = [0.01, 0.02]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"  
-    plot_file = os.path.join("kfold_kNN_data","plots", "Comparison on " + dataset_name + eps_name  + f'_freq{freq_global}_' + f"random{RANDOM_STATE}" + f'_fold{NumFold}_' + ".pdf")
+    plot_file = os.path.join("kfold_kNN_data","plots", "Comparison on " + dataset_name + eps_name  + f'_freq{freq_global}_' + f"random{RANDOM_STATE}" + f'_fold{NumFold}_'  + ".pdf")
     result_file = os.path.join("kfold_kNN_data", "saved_results","Results on " + dataset_name + eps_name +  f'_freq{freq_global}_'  + f"random{RANDOM_STATE}" + f'_fold{NumFold}_' + '.csv')
     if RUN :
         data = process_data(dataset_name = dataset_name)
@@ -179,15 +182,15 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True):
 if __name__ == "__main__":
     # ===> Tier 1 
 
-    experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
-    experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
-    experiment_kNN('MiddlePhalanxTW', 0.4)
-    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
-    # experiment_kNN("ProximalPhalanxTW", 0.7)
-    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
-    # experiment_kNN("SonyAIBORobotSurface1", 2)
-    # experiment_kNN("CBF", 1)
+    # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
+    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
+    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
+    # experiment_kNN('MiddlePhalanxTW', 0.4)
+    experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
+    experiment_kNN("ProximalPhalanxTW", 0.7)
+    experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
+    experiment_kNN("SonyAIBORobotSurface1", 2)
+    experiment_kNN("CBF", 1)
     # experiment_kNN('SwedishLeaf',0.9) 
     
     # experiment_kNN('Adiac',0.1) 
