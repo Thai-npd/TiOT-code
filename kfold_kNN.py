@@ -182,15 +182,15 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True, random = 1):
 if __name__ == "__main__":
     # ===> Tier 1 
 
-    experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
-    experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
-    experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
-    experiment_kNN('MiddlePhalanxTW', 0.4)
-    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
-    # experiment_kNN("ProximalPhalanxTW", 0.7)
-    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
-    # experiment_kNN("SonyAIBORobotSurface1", 2)
-    # experiment_kNN("CBF", 1)
+    # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
+    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
+    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
+    # experiment_kNN('MiddlePhalanxTW', 0.4)
+    experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
+    experiment_kNN("ProximalPhalanxTW", 0.7)
+    experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
+    experiment_kNN("SonyAIBORobotSurface1", 2)
+    experiment_kNN("CBF", 1)
     # experiment_kNN('SwedishLeaf',0.9) 
     
     # experiment_kNN('Adiac',0.1) 
