@@ -2,11 +2,9 @@ import numpy as np
 import ot
 from scipy.optimize import linprog
 from scipy.sparse import csr_matrix, hstack, vstack, eye, kron
-import pulp
 #np.seterr(divide='ignore', invalid='ignore', over='ignore')
 import time
 import warnings
-import cProfile
 from scipy.stats import norm
 
 def normalization(x,y):

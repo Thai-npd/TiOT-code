@@ -82,7 +82,7 @@ def process_data(dataset_name ):
 #     print(f"===> w_opt = {w_opt}")
 #     return w_opt
 
-def kNN(dataset_name, data, metric_name , eps , w, eta ):
+def kNN(dataset_name, data, metric_name , eps , w, eta = None ):
     global w_global, eps_global, eta_global
     w_global = w
     eps_global = eps
@@ -99,7 +99,7 @@ def kNN(dataset_name, data, metric_name , eps , w, eta ):
     X_train, Y_train, X_test, Y_test = data[0], data[1], data[2], data[3]
     knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
     knn.fit(X_train, Y_train)
-    with multiprocessing.Pool(64) as pool:
+    with multiprocessing.Pool(32) as pool:
         y_pred = list(tqdm(pool.imap(knn.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
     pool.close()
     accuracy = accuracy_score(Y_test, y_pred)
@@ -139,18 +139,18 @@ def experiment_kNN(dataset_name, w_TAOT, eta , RUN = True):
     eps_list = [0.01*i for i in range(1,11)]
     # eps_list = [0.01*i for i in range(5,11)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
-    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + f'_freq{freq_global}_'+ f"_eta{eta}" + '_TiOTonly_' + ".pdf")
-    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + f'_freq{freq_global}_'  + f"_eta{eta}" + '_TiOTonly_' + '.csv')
+    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + f'_freq{freq_global}_'+ f"_eta_adap"  + ".pdf")
+    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + f'_freq{freq_global}_'  + f"_eta_adap" + '.csv')
     if RUN :
         data = process_data(dataset_name = dataset_name)
         w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
         w_list_name = [r'\omega_{\text{grid}} \;/\; 5', r'\omega_{\text{grid}}', r'\omega_{\text{grid}} \times 5']
-        alg_names = ["eTiOT"]  # +  [fr"eTAOT$(\omega = {w})$" for w in w_list_name]
+        alg_names = ["eTiOT"]   +  [fr"eTAOT$(\omega = {w})$" for w in w_list_name]
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
         for eps in eps_list:
             results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = None, eta=eta))
-            # for i in range(len(w_list)):
-            #     results[fr"eTAOT$(\omega = {w_list_name[i]})$"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w_list[i]))
+            for i in range(len(w_list)):
+                results[fr"eTAOT$(\omega = {w_list_name[i]})$"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w_list[i]))
 
         save_result(results, result_file)
         plot_results(results, plot_file)
@@ -169,8 +169,8 @@ if __name__ == "__main__":
     # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7, 1)
     # experiment_kNN("ProximalPhalanxTW", 0.7, 1)
     # experiment_kNN("SonyAIBORobotSurface1", 2, 0.01)
-    experiment_kNN("CBF", 1, 0.01)
-    # experiment_kNN('SwedishLeaf',0.9, 0.01) 
+    # experiment_kNN("CBF", 1, 0.01)
+    experiment_kNN('SwedishLeaf',0.9, 0.01) 
     
     # experiment_kNN('Adiac',0.1) 
     # ==> New data
