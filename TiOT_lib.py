@@ -790,7 +790,7 @@ def time_analyse1():
 
 def time_analyse2():
     np.random.seed(42)
-    size = 500
+    size = 80
     x = np.linspace(-1, 1, size)
     X1 = norm.pdf(x, -1, 0.5)  # First Gaussian
     X2 = norm.pdf(x, 1, 0.5)   # Second Gaussian
@@ -820,5 +820,5 @@ def time_analyse():
     time_analyse2()
 
 
-# if __name__ == '__main__':
-#     time_analyse()
+if __name__ == '__main__':
+    time_analyse()
