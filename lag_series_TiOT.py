@@ -70,7 +70,7 @@ def dist_w_exp(RUN = True):
     df = pd.read_csv(file_path)
     df['date'] = pd.to_datetime(df['date'])
     df.set_index('date', inplace=True)
-    lags = [20,50,80,180]
+    lags = [20,90,180,270]
     w_list = [0.1 * i for i in range(11)]
     x = [df['meantemp'].iloc[:365]]
     dists = []
@@ -92,6 +92,6 @@ def dist_w_exp(RUN = True):
         plot_graph(results, plot_file, 'w', r"$w$", r'TAOT($w$)')
 
 def main():
-    dist_lag_exp(RUN=False)
+    dist_w_exp(RUN=True)
 
 main()

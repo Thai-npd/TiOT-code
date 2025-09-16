@@ -9,7 +9,7 @@ import os
 import time
 import csv
 import seaborn as sns
-
+import cProfile
 def process_data(dataset_name, start1, start2, numpoint ):
     filepath = os.path.join("time_series_kNN", dataset_name, dataset_name + "_TRAIN.txt" )
 
@@ -25,10 +25,10 @@ def process_data(dataset_name, start1, start2, numpoint ):
     return X1, X2
 
 def eTiOT(x,y, verbose = False, timing  = True):
-    return TiOT_lib.eTiOT(x, y, eps=0.1, freq=20, eta=2,  verbose=verbose, timing=timing)
+    return TiOT_lib.eTiOT(x, y, eps=0.1, freq=10, eta=1.5,  verbose=verbose, timing=timing, init_stepsize=False, subprob_tol=0.01)
 
 def eTAOT(x,y, verbose = False, timing  = True):
-    return TiOT_lib.eTAOT(x, y, eps=0.1, freq=1, verbose=verbose, timing=timing)
+    return TiOT_lib.eTAOT(x, y, eps=0.1, freq=10, verbose=verbose, timing=timing)
 
 def sinkhorn(x,y, verbose = False, timing  = True):
     return TiOT_lib.sinkhorn(x,y, eps=0.1)
@@ -146,5 +146,20 @@ def main():
         results = read_result(result_file)
         plot_runtime(results, plot_file, logscale)
 
+def time_analyse():
+    profiler = cProfile.Profile()
+    lengths = [2000]
+    X1  = gaussian_mixture_timeseries(2000, n_components=200, random_state=0)
+    X2 = gaussian_mixture_timeseries(2000, n_components=200, random_state=1)
+    profiler.enable()
+    metric = eTiOT
+    print(X1.shape)
+    results =  metric(X1, X2)
+    print(results)
+    profiler.disable()
+    profiler.dump_stats(f"{metric.__name__}output.prof")
+    print("Profiling finished. Results saved to output.prof")    
 
-main()
+
+
+time_analyse()
