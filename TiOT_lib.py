@@ -2,10 +2,9 @@ import numpy as np
 import ot
 from scipy.optimize import linprog
 from scipy.sparse import csr_matrix, hstack, vstack, eye, kron
-#np.seterr(divide='ignore', invalid='ignore', over='ignore')
+np.seterr(divide='ignore', invalid='ignore', over='ignore')
 import time
 import warnings
-#import cProfile
 from scipy.stats import norm
 
 def normalization(x,y):
@@ -417,7 +416,7 @@ def eTiOTold(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0
         h = b/(K.T @ g)
         if curIter % freq ==0 :
             w,  K = solver(g,h, w, subprob_tol= subprob_tol, maxIter=submax_iter, eta=eta, init_stepsize=init_stepsize)
-        if np.any(np.isnan(g)) or np.any(np.isnan(h)) or np.linalg.norm(g) == 0:
+        if verbose >= 2 and (np.any(np.isnan(g)) or np.any(np.isnan(h))):
             warnings.warn(f"Warning: numerical errors at iteration {curIter}: consider larger epsilon or smaller stepsize(current eta = {eta})")
             # g = g_old
             # h = h_old
@@ -563,7 +562,7 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
         h = b/(K.T @ g)
         if curIter % freq ==0 :
             w, K = solver(g,h, w, subprob_tol= subprob_tol, maxIter=submax_iter, eta=eta, init_stepsize=init_stepsize)
-        if np.any(np.isnan(g)) or np.any(np.isnan(h)):
+        if verbose >= 2 and (np.any(np.isnan(g)) or np.any(np.isnan(h))):
             warnings.warn(f"Warning: numerical errors at iteration {curIter}: consider larger epsilon or smaller stepsize(current eta = {eta})")
             break
         if curIter % freq == 0 and np.sum(np.abs(g * (K @ h) - a)) < tolerance: 
