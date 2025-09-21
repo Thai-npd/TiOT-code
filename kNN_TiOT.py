@@ -99,7 +99,7 @@ def kNN(dataset_name, data, metric_name , eps , w, eta = None ):
     X_train, Y_train, X_test, Y_test = data[0], data[1], data[2], data[3]
     knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
     knn.fit(X_train, Y_train)
-    with multiprocessing.Pool(8) as pool:
+    with multiprocessing.Pool(32) as pool:
         y_pred = list(tqdm(pool.imap(knn.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
     pool.close()
     accuracy = accuracy_score(Y_test, y_pred)
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     # experiment_kNN('DistalPhalanxTW', 0.5 )
     # experiment_kNN('ProximalPhalanxOutlineAgeGroup', 0.1)
     # experiment_kNN('ArrowHead', 3)
-    experiment_kNN('Ham', 0.7, RUN=False)
+    # experiment_kNN('Ham', 0.7)
 
 
     # ==> New data
@@ -217,7 +217,7 @@ if __name__ == "__main__":
     # experiment_kNN('Meat', 0.9)
     # experiment_kNN('MedicalImages', 4)
     # experiment_kNN('Lightning7', 0.9)
-    # experiment_kNN('ShapeletSim', 2)
+    experiment_kNN('ShapeletSim', 2)
     # experiment_kNN('Wine', 9)
     # experiment_kNN('Beef', 6)
     # experiment_kNN('Symbols', 0.8)
