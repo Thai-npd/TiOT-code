@@ -13,20 +13,145 @@ import seaborn as sns
 def plot_graph(results, plot_file, index_name, x_label, y_label):
     indices = results[index_name]
     names = [k for k in results.keys() if k != index_name]
+
     sns.set(style="whitegrid", context="paper")
-    plt.figure(figsize=(8, 5))
-    markers = ['', 'o', 's', '^', 'D', 'v', 'P', 'X']
+    plt.figure(figsize=(9, 7))
+    plt.grid(False) 
+    markers = ['o', 's', 'D', '^', 'v', 'P', 'X']
     linestyles = ['-', '--', '-.', ':', '-', '-', '-', '-']
-    i = 0
-    for name in names:
-        plt.plot(indices, results[name], label = name, linewidth=1.75, linestyle = linestyles[i])
-        i+=1
-    plt.xlabel(x_label, fontsize = 14)
-    plt.ylabel(y_label, fontsize = 14)
-    plt.legend()
+    colors1 = ["#090311", "#d3a20e", "#109510", '#B22222']
+    colors2 = ['#B22222', '#008080', "#582c05", '#e377c2']
+
+    if index_name == r'$\ell$':
+        colors = colors1
+        markers = [None for _ in range(len(markers))]
+        legend_size = 21
+        ncol = 2
+    elif index_name == 'w':
+        colors = colors2
+        linestyles = [None for _ in range(len(linestyles))]
+        legend_size = 21
+        ncol = 2
+    handles = []
+    labels = []
+
+    for i, name in enumerate(names):
+        (line,) = plt.plot(
+            indices,
+            results[name],
+            label=name,
+            linewidth=1.75,
+            linestyle=linestyles[i],
+            color=colors[i],
+            marker=markers[i],
+        )
+        handles.append(line)
+        labels.append(name)
+
+    plt.xlabel(x_label, fontsize=22)
+    plt.ylabel(y_label, fontsize=22)
+
+    # Make axis numbers larger
+    plt.tick_params(axis="both", which="major", labelsize=20)
+
+    # Place legend outside, centered below plot
+    plt.legend(
+        handles,
+        labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.15),
+        fontsize=legend_size,
+        ncol=ncol,
+        frameon=False,
+    )
+
     plt.tight_layout()
-    plt.savefig(plot_file, dpi=300)  # High-resolution
+    plt.savefig(plot_file, dpi=300, bbox_inches="tight")  # ensure legend not cut off
     plt.show()
+
+# def plot_graph(results, plot_file, index_name, x_label, y_label):
+#     indices = results[index_name]
+#     names = [k for k in results.keys() if k != index_name]
+#     sns.set(style="whitegrid", context="paper")
+#     plt.figure(figsize=(8, 5))
+
+#     markers = ['o', 's', 'D', '^', 'v', 'P', 'X']
+#     linestyles = ['-', '--', '-.', ':', '-', '-', '-', '-']
+#     colors1 = ["#090311", "#d3a20e", "#109510", '#B22222']
+#     colors2 = ['#B22222', '#008080', "#582c05", '#e377c2']
+
+#     if index_name == r'$\ell$':
+#         colors = colors1
+#         markers = [None for _ in markers]
+#         legend_size = 11
+#     elif index_name == 'w':
+#         colors = colors2
+#         linestyles = [None for _ in linestyles]
+#         legend_size = 12
+
+#     lines = []
+#     for i, name in enumerate(names):
+#         line, = plt.plot(indices, results[name],
+#                          label=name,
+#                          linewidth=1.75,
+#                          linestyle=linestyles[i],
+#                          color=colors[i],
+#                          marker=markers[i])
+#         lines.append(line)
+
+#     plt.xlabel(x_label, fontsize=14)
+#     plt.ylabel(y_label, fontsize=14)
+
+#     # --- adjust tick label size (axis numbers) ---
+#     plt.tick_params(axis="both", labelsize=12)
+
+#     # --- legend outside, text above line ---
+#     handler_map = {line: TextAboveLineHandler() for line in lines}
+#     plt.legend(
+#     handles=lines,
+#     labels=['']*len(lines),
+#     handler_map=handler_map,
+#     loc="upper center",
+#     bbox_to_anchor=(0.5, -0.25),
+#     ncol=2,
+#     frameon=False,
+#     fontsize=legend_size,
+#     handleheight=2.5  # increase spacing between entries
+# )
+
+#     plt.tight_layout()
+#     plt.savefig(plot_file, dpi=300, bbox_inches="tight")
+#     plt.show()
+
+# def plot_graph(results, plot_file, index_name, x_label, y_label):
+#     indices = results[index_name]
+#     names = [k for k in results.keys() if k != index_name]
+#     sns.set(style="whitegrid", context="paper")
+#     plt.figure(figsize=(8, 5))
+#     markers = [ 'o', 's', 'D', '^',  'v', 'P', 'X']
+#     linestyles = ['-', '--', '-.', ':', '-', '-', '-', '-']
+#     colors1 = ["#090311", "#d3a20e", "#109510", '#B22222'] # '#1f77b4'
+#     colors2 = ['#B22222',  '#008080', "#582c05",  '#e377c2']
+#     i = 0
+#     if index_name == r'$\ell$':
+#         colors = colors1
+#         markers = [None for i in range(len(markers))]
+#         legend_size= 11
+#         loc = "lower right"
+#     elif index_name == 'w':
+#         colors = colors2
+#         linestyles = [None for i in range(len(linestyles))]
+#         legend_size= 12
+#         loc = "upper right"
+#     for name in names:
+#         plt.plot(indices, results[name], label = name, linewidth=1.75, linestyle = linestyles[i], color = colors[i], marker = markers[i])
+#         i+=1
+#     plt.xlabel(x_label, fontsize = 14)
+#     plt.ylabel(y_label, fontsize = 14)
+#     plt.legend(loc = loc, fontsize=legend_size)
+#     plt.tight_layout()
+#     plt.savefig(plot_file, dpi=300)  # High-resolution
+#     plt.show()
 
 def save_result(results, result_file):
     df = pd.DataFrame(results)
@@ -47,30 +172,34 @@ def dist_lag_exp(RUN = True):
     df.set_index('date', inplace=True)
 
     w_list = [0.2, 0.5, 0.8]
-    metric_names = ['TiOT'] + [f"TAOT(w = {w})" for w in w_list]
-    results = {**{'lag' : lags}, **{name: [] for name in metric_names}}
+    #metric_names = ['TiOT'] + [f"TAOT(w = {w})" for w in w_list]
+    metric_names = (
+    [r"$\mathrm{TiOT}(x^{(\ell)}, x^{(0)})$"]
+    + [rf"$\mathrm{{TAOT}}_{{w={w}}}(x^{{(\ell)}}, x^{{(0)}})$" for w in w_list]
+)
+    results = {**{r'$\ell$' : lags}, **{name: [] for name in metric_names}}
 
     result_file = os.path.join("lag_series_data", f"Results distances of original with lag series {file_path}(lag {lags[0]} to {lags[-1]}).csv")
     plot_file = os.path.join("lag_series_data", f"Plot distances of original with lag series {file_path}(lag {lags[0]} to {lags[-1]}).pdf")
 
     if RUN:
         for lag in lags:
-            results['TiOT'].append(TiOT(df['meantemp'].iloc[start:start + length], df['meantemp'].iloc[start + lag:start + lag+length])[0])
+            results[r"$\mathrm{TiOT}(x^{(\ell)}, x^{(0)})$"].append(TiOT(np.array(df['meantemp'].iloc[start:start + length]), np.array(df['meantemp'].iloc[start + lag:start + lag+length]))[0])
             for w in w_list:
-                results[f'TAOT(w = {w})'].append(TAOT(df['meantemp'].iloc[start:start + length], df['meantemp'].iloc[start + lag:start + lag+length], w = w)[0])
+                results[rf"$\mathrm{{TAOT}}_{{w={w}}}(x^{{(\ell)}}, x^{{(0)}})$"].append(TAOT(np.array(df['meantemp'].iloc[start:start + length]), np.array(df['meantemp'].iloc[start + lag:start + lag+length]), w = w)[0])
             print(f"Done Lag = {lag}")
         save_result(results, result_file)
-        plot_graph(results, plot_file, 'lag', 'Lag(days)', 'Distance')
+        plot_graph(results, plot_file, r'$\ell$', r'$\ell$', 'Distance')
     else:
         results = read_result(result_file)
-        plot_graph(results, plot_file, 'lag', 'Lag(days)', 'Distance')
+        plot_graph(results, plot_file, r'$\ell$', r'$\ell$', 'Distance')
 
 def dist_w_exp(RUN = True):
     file_path = 'DailyDelhiClimateTrain.csv'
     df = pd.read_csv(file_path)
     df['date'] = pd.to_datetime(df['date'])
     df.set_index('date', inplace=True)
-    lags = [20,90,180,270]
+    lags = [30 ,90,180,270] #
     w_list = [0.1 * i for i in range(11)]
     x = [df['meantemp'].iloc[:365]]
     dists = []
@@ -80,18 +209,18 @@ def dist_w_exp(RUN = True):
     if RUN:
         for lag in lags:
             x.append(df['meantemp'].iloc[lag:lag + 365])
-        results = {**{'w' : w_list}, **{f'lag = {lag}': [] for lag in lags}}
+        results = {**{'w' : w_list}, **{rf'$\ell= {lag}$': [] for lag in lags}}
         for i ,lag in zip(range(1, len(x)), lags):
             for w in w_list:
-                results[f'lag = {lag}'].append(TiOT_lib.TAOT(x[0].to_list(), x[i].to_list(), w = w)[0])
+                results[rf'$\ell= {lag}$'].append(TiOT_lib.TAOT(x[0].to_list(), x[i].to_list(), w = w)[0])
             print(f'Complete lag = {lag}')
         save_result(results, result_file)
-        plot_graph(results, plot_file, 'w', r"$w$", r'TAOT($w$)')
+        plot_graph(results, plot_file, 'w', r"$w$", r'$\mathrm{TAOT}_w$')
     else:
         results = read_result(result_file)
-        plot_graph(results, plot_file, 'w', r"$w$", r'TAOT($w$)')
+        plot_graph(results, plot_file, 'w', r"$w$", r'$\mathrm{TAOT}_w$')
 
 def main():
-    dist_w_exp(RUN=True)
+    dist_w_exp(RUN=False)
 
 main()

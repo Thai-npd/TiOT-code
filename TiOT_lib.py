@@ -572,13 +572,15 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
         curIter += 1
     if curIter == maxIter and verbose >= 1: print(f"TiOT algorithm did not stop after {maxIter} iterations")
     C = eps * (temporal_cost - w*spat_temp_diff)
-    transport_plan = g.reshape((-1, 1)) * K * h.reshape((1, -1)) 
-    distance = np.einsum("ij,ij->", C, transport_plan)
+    K *= h.reshape((1, -1)) 
+    K *= g.reshape((-1,1))
+    #transport_plan = g.reshape((-1, 1)) * K * h.reshape((1, -1)) 
+    distance = np.einsum("ij,ij->", C, K)
     end = time.perf_counter()
     if timing == True:
-        return distance, transport_plan, w, end - start
+        return distance, K, w, end - start
     else:
-        return distance, transport_plan, w
+        return distance, K, w
 
 def TAOTold(x, y, a = None, b = None, w = 0.5, costmatrix = costmatrix1old, verbose = None, timing = False):
     """
