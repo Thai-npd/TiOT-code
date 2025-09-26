@@ -17,7 +17,7 @@ def plot_graph(results, plot_file, index_name, x_label, y_label):
     sns.set(style="whitegrid", context="paper")
     plt.figure(figsize=(9, 7))
     plt.grid(False) 
-    markers = ['o', 's', 'D', '^', 'v', 'P', 'X']
+    markers = ['o', 's', 'v', '^',  'P', 'X']
     linestyles = ['-', '--', '-.', ':', '-', '-', '-', '-']
     colors1 = ["#090311", "#d3a20e", "#109510", '#B22222']
     colors2 = ['#B22222', '#008080', "#582c05", '#e377c2']
@@ -44,6 +44,7 @@ def plot_graph(results, plot_file, index_name, x_label, y_label):
             linestyle=linestyles[i],
             color=colors[i],
             marker=markers[i],
+            markersize=8, 
         )
         handles.append(line)
         labels.append(name)
