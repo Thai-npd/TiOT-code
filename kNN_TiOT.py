@@ -109,7 +109,7 @@ def experiment_kNN(dataset_name, w_TAOT, eta = None , RUN = False):
     eps_list = [0.01*i for i in range(1,11)]
 
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
-    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + f'_freq{freq_global}_'+ f"_eta_adap"  + ".pdf")
+    plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
     result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + f'_freq{freq_global}_'  + f"_eta_adap" + '.csv')
     if RUN :
         data = process_data(dataset_name = dataset_name)
