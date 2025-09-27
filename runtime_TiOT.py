@@ -12,8 +12,8 @@ import seaborn as sns
 import cProfile
 from scipy.stats import norm
 
-def eTiOT(X,Y, verbose = False, eps = 0.1, freq = 10, eta =0.05,  subprob_tol = 0.01, init_stepsize = False, submax_iter = 50): #default for align data eta = 0.05
-    return TiOT_lib.eTiOT(X,Y, eps = eps, freq = freq,  verbose=2, timing=True, eta=eta, init_stepsize=init_stepsize, subprob_tol=subprob_tol, submax_iter=submax_iter)
+def eTiOT(X,Y, verbose = False, eps = 0.1, freq = 10, eta =0.05,  subprob_tol = 0.01, init_stepsize = False, submax_iter = 50, solver = 'PGD', maxIter = 5000, tol = 0.005): #default for align data eta = 0.05
+    return TiOT_lib.eTiOT(X,Y, eps = eps, freq = freq,  verbose=2, timing=True, eta=eta, init_stepsize=init_stepsize, subprob_tol=subprob_tol, submax_iter=submax_iter, solver=solver, tolerance=tol, maxIter=maxIter)
 
 def eTAOT(X,Y, verbose = False):
     return TiOT_lib.eTAOT(X,Y, eps = 0.1, freq = 1,  verbose=2, timing=True)
@@ -42,7 +42,7 @@ def plot_runtime(results, plot_file, logscale):
     if logscale:
         plt.yscale("log")  
         #plt.xscale("log")  
-    plt.tick_params(axis="both", which="major", labelsize=16)
+    plt.tick_params(axis="both", which="major", labelsize=20, bottom=True, left=True)
     plt.xlabel("Series' lengths", fontsize = 20)
     plt.ylabel("Running time (s)", fontsize = 20)
     plt.legend(loc = 'best', fontsize = 16)
@@ -123,18 +123,17 @@ def generate_two_gaussian(n, noise=0.01, seed=6):
 
 
 def deviation_experiment():
-    size = 100
+    size = 50
     noise = 1
-
-    seeds = [i for i in range(100)]
-    lamdas = [ 2, 10, 50, 100]
+    seeds = [i for i in range(10)]
+    lamdas = [2, 10, 50, 100, 200, 400  ] #2, 10, 50, 100, 
     eps_list = 1/np.array(lamdas)
     plot_file = os.path.join("runningtime_data", 'boxplot' + f"_n = {size}__noise = {noise}_seed = {len(seeds)}_"  + ".pdf")
     result_file = os.path.join("runningtime_data", 'boxplot' + f"_n = {size}__noise = {noise}__seed = {len(seeds)}_" + ".csv")
     result_w_file = os.path.join("runningtime_data", 'boxplot' + f"_n = {size}__noise = {noise}_seed = {len(seeds)}__" + ".csv")
     results = dict()
     results_w = dict()
-    RUN = False
+    RUN = True
     if RUN :
         for eps in eps_list:
             deviation = []
@@ -143,10 +142,10 @@ def deviation_experiment():
             for seed in seeds:
                 #X, Y = generate_data(size=size, seed=seed, noise=noise, l = -1.5, r = 1.5)
                 X, Y = generate_two_gaussian(n = size, seed=seed)
-                emd, plan,  w_emd, t = TiOT(X,Y)
-                sinkhorn, plan, w_sink,t  = eTiOT(X,Y, eps=eps)
+                emd, plan_emd,  w_emd, t = TiOT(X,Y)
+                sinkhorn, plan_sink, w_sink,t  = eTiOT(X,Y, eps=eps, eta = 0.002, subprob_tol=10**-7, submax_iter=400, tol = 10**-9, maxIter = 50000)
                 print(f"At seed {seed}: emd = {emd} with w = {w_emd}, sinkhorn = {sinkhorn} with w = {w_sink}")
-                deviation.append(np.abs(sinkhorn - emd)/emd)
+                deviation.append(np.linalg.norm(plan_emd - plan_sink)/np.linalg.norm(plan_emd))
                 w_deviation.append(np.abs(w_emd - w_sink) / w_emd )
             results[eps] = deviation
             results_w[eps] = w_deviation
@@ -184,12 +183,13 @@ def deviation_experiment():
     # Axis labels
     ax.set_xticks(positions)
     ax.set_xticklabels(lamdas, fontsize=16)
-    ax.tick_params(axis='y', labelsize=16)
+    # ax.tick_params(axis='y', labelsize=16)
+    ax.tick_params(axis="both", which="major", labelsize=21, bottom=True, left=True)
     ax.set_ylabel('Distribution of deviation', fontsize=20, labelpad=12)
     ax.set_xlabel(r'$1/\varepsilon $', fontsize=20, labelpad=12)
     # Legend (clean style)
-    ax.legend([bp1["boxes"][0], bp2["boxes"][0]], [r"$\frac{|eTiOT - TiOT|}{TiOT}$", r"$\frac{|w^*_{\varepsilon} - w^*|}{w^*}$"],
-            loc="upper right", fontsize=18, frameon=True)
+    ax.legend([bp1["boxes"][0], bp2["boxes"][0]], [r"$\frac{||\pi^*_{\varepsilon} - \pi^*||}{||\pi^*||}$", r"$\frac{|w^*_{\varepsilon} - w^*|}{w^*}$"],
+            loc="upper right", fontsize=22, frameon=True)
 
     # Tight layout
     plt.tight_layout()
