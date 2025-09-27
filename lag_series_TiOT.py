@@ -25,12 +25,12 @@ def plot_graph(results, plot_file, index_name, x_label, y_label):
     if index_name == r'$\ell$':
         colors = colors1
         markers = [None for _ in range(len(markers))]
-        legend_size = 21
+        legend_size = 25
         ncol = 2
     elif index_name == 'w':
         colors = colors2
         linestyles = [None for _ in range(len(linestyles))]
-        legend_size = 21
+        legend_size = 25
         ncol = 2
     handles = []
     labels = []
@@ -49,12 +49,11 @@ def plot_graph(results, plot_file, index_name, x_label, y_label):
         handles.append(line)
         labels.append(name)
 
-    plt.xlabel(x_label, fontsize=22)
-    plt.ylabel(y_label, fontsize=22)
+    plt.xlabel(x_label, fontsize=23)
+    plt.ylabel(y_label, fontsize=23)
 
     # Make axis numbers larger
-    plt.tick_params(axis="both", which="major", labelsize=20)
-
+    plt.tick_params(axis="both", which="major", labelsize=21, bottom=True, left=True)
     # Place legend outside, centered below plot
     plt.legend(
         handles,
@@ -80,6 +79,10 @@ def read_result(result_file):
     results = df.to_dict(orient='list')
     return results
 
+def safe_sqrt(x):
+    # This function allow safe sqrt and will be needed when numerical error causing the distance to be negative. 
+    return np.sqrt(np.clip(x, 0, None))
+
 def dist_lag_exp(RUN = True):
     start = 0
     lags = range(0, 730)
@@ -92,8 +95,8 @@ def dist_lag_exp(RUN = True):
     w_list = [0.2, 0.5, 0.8]
     #metric_names = ['TiOT'] + [f"TAOT(w = {w})" for w in w_list]
     metric_names = (
-    [r"$\mathrm{TiOT}(x^{(\ell)}, x^{(0)})$"]
-    + [rf"$\mathrm{{TAOT}}_{{w={w}}}(x^{{(\ell)}}, x^{{(0)}})$" for w in w_list]
+    [r"$\mathcal{D}_2(x^{(\ell)}, x^{(0)})$"]
+    + [rf"$\mathcal{{W}}_{{2, {w}}}(x^{{(\ell)}}, x^{{(0)}})$" for w in w_list]
 )
     results = {**{r'$\ell$' : lags}, **{name: [] for name in metric_names}}
 
@@ -102,9 +105,9 @@ def dist_lag_exp(RUN = True):
 
     if RUN:
         for lag in lags:
-            results[r"$\mathrm{TiOT}(x^{(\ell)}, x^{(0)})$"].append(np.sqrt(max(TiOT(np.array(df['meantemp'].iloc[start:start + length]), np.array(df['meantemp'].iloc[start + lag:start + lag+length]))[0], 0 )))
+            results[r"$\mathcal{D}_2(x^{(\ell)}, x^{(0)})$"].append(safe_sqrt(TiOT(np.array(df['meantemp'].iloc[start:start + length]), np.array(df['meantemp'].iloc[start + lag:start + lag+length]))[0]))
             for w in w_list:
-                results[rf"$\mathrm{{TAOT}}_{{w={w}}}(x^{{(\ell)}}, x^{{(0)}})$"].append(np.sqrt(TAOT(np.array(df['meantemp'].iloc[start:start + length]), np.array(df['meantemp'].iloc[start + lag:start + lag+length]), w = w)[0]))
+                results[rf"$\mathcal{{W}}_{{2, {w}}}(x^{{(\ell)}}, x^{{(0)}})$"].append(safe_sqrt(TAOT(np.array(df['meantemp'].iloc[start:start + length]), np.array(df['meantemp'].iloc[start + lag:start + lag+length]), w = w)[0]))
             print(f"Done Lag = {lag}")
         save_result(results, result_file)
         plot_graph(results, plot_file, r'$\ell$', r'$\ell$', 'Distance')
@@ -121,8 +124,8 @@ def dist_w_exp(RUN = True):
     w_list = [0.1 * i for i in range(11)]
     x = [df['meantemp'].iloc[:365]]
     dists = []
-    result_file = os.path.join("lag_series_data", f"Results TAOT distances with w on {file_path}(lag {lags[0]} to {lags[-1]}).csv")
-    plot_file = os.path.join("lag_series_data", f"Plot TAOT distances with w on {file_path}(lag {lags[0]} to {lags[-1]}).pdf")
+    result_file = os.path.join("lag_series_data", f"Results TAOT distances with w on {file_path}(lag {lags[0]} to {lags[-1]})_sqrt.csv")
+    plot_file = os.path.join("lag_series_data", f"Plot TAOT distances with w on {file_path}(lag {lags[0]} to {lags[-1]})_sqrt.pdf")
 
     if RUN:
         for lag in lags:
@@ -133,12 +136,12 @@ def dist_w_exp(RUN = True):
                 results[rf'$\ell= {lag}$'].append(np.sqrt(TiOT_lib.TAOT(x[0].to_list(), x[i].to_list(), w = w)[0]))
             print(f'Complete lag = {lag}')
         save_result(results, result_file)
-        plot_graph(results, plot_file, 'w', r"$w$", r'$\mathrm{TAOT}_w$')
+        plot_graph(results, plot_file, 'w', r"$w$", rf"$\mathcal{{W}}_{{2, w}}$")
     else:
         results = read_result(result_file)
-        plot_graph(results, plot_file, 'w', r"$w$", r'$\mathrm{TAOT}_w$')
+        plot_graph(results, plot_file, 'w', r"$w$", rf"$\mathcal{{W}}_{{2, {w}}}$")
 
 def main():
-    dist_lag_exp(RUN=False)
+    dist_w_exp()
 
 main()
