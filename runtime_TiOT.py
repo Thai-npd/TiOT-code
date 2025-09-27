@@ -29,15 +29,15 @@ def plot_runtime(results, plot_file, logscale):
     lengths = results['len']
     metric_names = [k for k in results.keys() if k != 'len']
     sns.set(style="whitegrid", context="paper")
-    plt.figure(figsize=(8, 5))
+    plt.figure(figsize=(9, 7))
     plt.grid(False)
     markers = ['s', 'o',  '^', 'D', 'v', 'P', 'X']
     i = 0
     colors1 = ['#6d36ab', '#ff7f0e', '#1f77b4', '#2ca02c', '#d62728'] # '#1f77b4'
     colors2 = ["#07283e", "#582c05", "#0a460a", "#920e0e"] # '#1f77b4'
-
+    name_dict = {'TiOT':   r'$\mathcal{D}_2$', 'eTiOT':  r'$\mathcal{D}_2^\varepsilon$', 'TAOT':   r'$\mathcal{W}_{2,0.5}$', 'eTAOT':  r'$\mathcal{W}_{2,0.5}^\varepsilon$'}
     for name in metric_names:
-        plt.plot(lengths[:len(results[name])], results[name], label = name, color = colors1[i], linewidth=1.75, marker = markers[i], markersize = 6)
+        plt.plot(lengths[:len(results[name])], results[name], label = name_dict[name], color = colors1[i], linewidth=1.75, marker = markers[i], markersize = 6)
         i+=1
     if logscale:
         plt.yscale("log")  
@@ -45,8 +45,16 @@ def plot_runtime(results, plot_file, logscale):
     plt.tick_params(axis="both", which="major", labelsize=20, bottom=True, left=True)
     plt.xlabel("Series' lengths", fontsize = 20)
     plt.ylabel("Running time (s)", fontsize = 20)
-    plt.legend(loc = 'best', fontsize = 16)
+    plt.legend(
+        loc='upper center',
+        bbox_to_anchor=(0.5, -0.25),
+        ncol=4,
+        fontsize=20,
+        frameon=False
+    )
+
     plt.tight_layout()
+    #plt.subplots_adjust(bottom=0.25) 
     plt.savefig(plot_file, dpi=300)  # High-resolution
     plt.show()
 
@@ -58,13 +66,6 @@ def read_result(result_file):
     df = pd.read_csv(result_file)
     results = df.to_dict(orient='list')
     return results
-
-# def generate_data(size, seed = 42):
-#     np.random.seed(seed)
-#     x = np.linspace(-1, 1, size)
-#     X1 = norm.pdf(x, -1, 0.5)  # First Gaussian
-#     X2 = norm.pdf(x, 1, 0.5)   # Second Gaussian
-#     return X1 / np.sum(X1), X2 / np.sum(X2)
 
 def generate_data(size, seed=42, noise=None, l = -1 , r = 1):
     np.random.seed(seed)
@@ -121,82 +122,6 @@ def generate_two_gaussian(n, noise=0.01, seed=6):
 
     return y1, y2
 
-
-def deviation_experiment():
-    size = 50
-    noise = 1
-    seeds = [i for i in range(10)]
-    lamdas = [2, 10, 50, 100, 200, 400  ] #2, 10, 50, 100, 
-    eps_list = 1/np.array(lamdas)
-    plot_file = os.path.join("runningtime_data", 'boxplot' + f"_n = {size}__noise = {noise}_seed = {len(seeds)}_"  + ".pdf")
-    result_file = os.path.join("runningtime_data", 'boxplot' + f"_n = {size}__noise = {noise}__seed = {len(seeds)}_" + ".csv")
-    result_w_file = os.path.join("runningtime_data", 'boxplot' + f"_n = {size}__noise = {noise}_seed = {len(seeds)}__" + ".csv")
-    results = dict()
-    results_w = dict()
-    RUN = True
-    if RUN :
-        for eps in eps_list:
-            deviation = []
-            w_deviation = []
-            print(f"Start experimenting with eps = {eps}")
-            for seed in seeds:
-                #X, Y = generate_data(size=size, seed=seed, noise=noise, l = -1.5, r = 1.5)
-                X, Y = generate_two_gaussian(n = size, seed=seed)
-                emd, plan_emd,  w_emd, t = TiOT(X,Y)
-                sinkhorn, plan_sink, w_sink,t  = eTiOT(X,Y, eps=eps, eta = 0.002, subprob_tol=10**-7, submax_iter=400, tol = 10**-9, maxIter = 50000)
-                print(f"At seed {seed}: emd = {emd} with w = {w_emd}, sinkhorn = {sinkhorn} with w = {w_sink}")
-                deviation.append(np.linalg.norm(plan_emd - plan_sink)/np.linalg.norm(plan_emd))
-                w_deviation.append(np.abs(w_emd - w_sink) / w_emd )
-            results[eps] = deviation
-            results_w[eps] = w_deviation
-    else:
-        results = read_result(result_file)
-        results_w = read_result(result_w_file)
-
-    save_result(results, result_file)
-    save_result(results_w, result_w_file)
-
-    positions = np.arange(1, len(lamdas) + 1)
-    width = 0.3
-
-    sns.set(style="whitegrid", context="paper")
-    fig, ax = plt.subplots(figsize=(8, 5))
-    ax.grid(False)
-    # Red outline, no fill (results)
-    bp1 = ax.boxplot(list(results.values()), positions=positions - width/2, widths=0.25,
-                    patch_artist=False,
-                    boxprops=dict(color='#B22222', linewidth=1.2),
-                    capprops=dict(color='#B22222', linewidth=1.2),
-                    whiskerprops=dict(color='#B22222', linewidth=1.2),
-                    flierprops=dict(marker='o', markersize=3, markerfacecolor='#B22222', markeredgecolor='#B22222'),
-                    medianprops=dict(color='#B22222', linewidth=1.2))
-
-    # Gray outline, dashed style (results_w)
-    bp2 = ax.boxplot(list(results_w.values()), positions=positions + width/2, widths=0.25,
-                    patch_artist=False,
-                    boxprops=dict(color='#008080', linewidth=1.2, linestyle='--'),
-                    capprops=dict(color='#008080', linewidth=1.2, linestyle='--'),
-                    whiskerprops=dict(color='#008080', linewidth=1.2, linestyle='--'),
-                    flierprops=dict(marker='s', markersize=3, markerfacecolor='#008080', markeredgecolor='#008080'),
-                    medianprops=dict(color='#008080', linewidth=1.2))
-
-    # Axis labels
-    ax.set_xticks(positions)
-    ax.set_xticklabels(lamdas, fontsize=16)
-    # ax.tick_params(axis='y', labelsize=16)
-    ax.tick_params(axis="both", which="major", labelsize=21, bottom=True, left=True)
-    ax.set_ylabel('Distribution of deviation', fontsize=20, labelpad=12)
-    ax.set_xlabel(r'$1/\varepsilon $', fontsize=20, labelpad=12)
-    # Legend (clean style)
-    ax.legend([bp1["boxes"][0], bp2["boxes"][0]], [r"$\frac{||\pi^*_{\varepsilon} - \pi^*||}{||\pi^*||}$", r"$\frac{|w^*_{\varepsilon} - w^*|}{w^*}$"],
-            loc="upper right", fontsize=22, frameon=True)
-
-    # Tight layout
-    plt.tight_layout()
-    plt.savefig(plot_file , dpi=300)
-    plt.show()
-
-
 def runtime_experiment():
     RUN = False
     logscale = False
@@ -240,7 +165,94 @@ def runtime_experiment():
         results = read_result(result_file)
         plot_runtime(results, plot_file, logscale)
 
+def deviation_experiment():
+    size = 100
+    noise = 1
+    seeds = [i for i in range(100)]
+    lamdas = [2, 10, 50, 100] #2, 10, 50, 100, 
+    eps_list = 1/np.array(lamdas)
+    plot_file = os.path.join("runningtime_data", 'boxplot' + f"_n = {size}__noise = {noise}_seed = {len(seeds)}_"  + ".pdf")
+    result_file = os.path.join("runningtime_data", 'boxplot' + f"_n = {size}__noise = {noise}__seed = {len(seeds)}_" + ".csv")
+    result_w_file = os.path.join("runningtime_data", 'boxplot' + f"_n = {size}__noise = {noise}_seed = {len(seeds)}__" + ".csv")
+    results = dict()
+    results_w = dict()
+    RUN = False
+    if RUN :
+        for eps in eps_list:
+            deviation = []
+            w_deviation = []
+            print(f"Start experimenting with eps = {eps}")
+            for seed in seeds:
+                #X, Y = generate_data(size=size, seed=seed, noise=noise, l = -1.5, r = 1.5)
+                X, Y = generate_two_gaussian(n = size, seed=seed)
+                emd, plan_emd,  w_emd, t = TiOT(X,Y)
+                sinkhorn, plan_sink, w_sink,t  = eTiOT(X,Y, eps=eps, eta = 0.002, subprob_tol=10**-7, submax_iter=400, tol = 10**-9, maxIter = 50000)
+                print(f"At seed {seed}: emd = {emd} with w = {w_emd}, sinkhorn = {sinkhorn} with w = {w_sink}")
+                deviation.append(np.abs(sinkhorn - emd) / emd)
+                w_deviation.append(np.abs(w_emd - w_sink) / w_emd )
+            results[eps] = deviation
+            results_w[eps] = w_deviation
+    else:
+        results = read_result(result_file)
+        results_w = read_result(result_w_file)
+
+    save_result(results, result_file)
+    save_result(results_w, result_w_file)
+
+    positions = np.arange(1, len(lamdas) + 1)
+    width = 0.3
+
+    sns.set(style="whitegrid", context="paper")
+    fig, ax = plt.subplots(figsize=(9, 7))
+    ax.grid(False)
+    # Red outline, no fill (results)
+    bp1 = ax.boxplot(list(results.values()), positions=positions - width/2, widths=0.25,
+                    patch_artist=False,
+                    boxprops=dict(color='#B22222', linewidth=1.2),
+                    capprops=dict(color='#B22222', linewidth=1.2),
+                    whiskerprops=dict(color='#B22222', linewidth=1.2),
+                    flierprops=dict(marker='o', markersize=3, markerfacecolor='#B22222', markeredgecolor='#B22222'),
+                    medianprops=dict(color='#B22222', linewidth=1.2))
+
+    # Gray outline, dashed style (results_w)
+    bp2 = ax.boxplot(list(results_w.values()), positions=positions + width/2, widths=0.25,
+                    patch_artist=False,
+                    boxprops=dict(color='#008080', linewidth=1.2, linestyle='--'),
+                    capprops=dict(color='#008080', linewidth=1.2, linestyle='--'),
+                    whiskerprops=dict(color='#008080', linewidth=1.2, linestyle='--'),
+                    flierprops=dict(marker='s', markersize=3, markerfacecolor='#008080', markeredgecolor='#008080'),
+                    medianprops=dict(color='#008080', linewidth=1.2))
+
+    # Axis labels
+    ax.set_xticks(positions)
+    ax.set_xticklabels(lamdas, fontsize=16)
+    # ax.tick_params(axis='y', labelsize=16)
+    ax.tick_params(axis="both", which="major", labelsize=21, bottom=True, left=True)
+    ax.set_ylabel('Distribution of deviation', fontsize=20, labelpad=12)
+    ax.set_xlabel(r'$1/\varepsilon $', fontsize=20, labelpad=12)
+    # Legend (clean style)
+    # ax.legend([bp2["boxes"][0], bp1["boxes"][0]], [ r"$\frac{|w^*_{\varepsilon} - w^*|}{w^*}$", r"$\frac{| \langle C(w^*_{\varepsilon}), \pi^*_{\varepsilon} \rangle - \langle C(w^*), \pi^* \rangle |}{\langle C(w^*), \pi^* \rangle}$"],
+    #         loc="best", fontsize=22, frameon=True)
+    ax.legend(
+    [bp2["boxes"][0], bp1["boxes"][0]],
+    [
+        r"$\frac{|w^*_{\varepsilon} - w^*|}{w^*}$",
+        r"$\frac{| \langle C(w^*_{\varepsilon}), \pi^*_{\varepsilon} \rangle - \langle C(w^*), \pi^* \rangle |}{\langle C(w^*), \pi^* \rangle}$"
+    ],
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.25),  # push further down
+    ncol=2,
+    fontsize=22,
+    frameon=False                  # remove legend box
+)
+    plt.yscale("log") 
+    # Tight layout
+    plt.tight_layout()
+    plt.savefig(plot_file , dpi=300)
+    plt.show()
+
+
 def main():
-    deviation_experiment()
+    runtime_experiment()
 
 main()
