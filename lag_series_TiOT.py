@@ -44,7 +44,7 @@ def plot_graph(results, plot_file, index_name, x_label, y_label):
             linestyle=linestyles[i],
             color=colors[i],
             marker=markers[i],
-            markersize=8, 
+            markersize=10, 
         )
         handles.append(line)
         labels.append(name)
@@ -52,9 +52,7 @@ def plot_graph(results, plot_file, index_name, x_label, y_label):
     plt.xlabel(x_label, fontsize=23)
     plt.ylabel(y_label, fontsize=23)
 
-    # Make axis numbers larger
     plt.tick_params(axis="both", which="major", labelsize=21, bottom=True, left=True)
-    # Place legend outside, centered below plot
     plt.legend(
         handles,
         labels,
@@ -66,7 +64,7 @@ def plot_graph(results, plot_file, index_name, x_label, y_label):
     )
 
     plt.tight_layout()
-    plt.savefig(plot_file, dpi=300, bbox_inches="tight")  # ensure legend not cut off
+    plt.savefig(plot_file, dpi=300, bbox_inches="tight") 
     plt.show()
 
 
@@ -93,7 +91,6 @@ def dist_lag_exp(RUN = True):
     df.set_index('date', inplace=True)
 
     w_list = [0.2, 0.5, 0.8]
-    #metric_names = ['TiOT'] + [f"TAOT(w = {w})" for w in w_list]
     metric_names = (
     [r"$\mathcal{D}_2(x^{(\ell)}, x^{(0)})$"]
     + [rf"$\mathcal{{W}}_{{2, {w}}}(x^{{(\ell)}}, x^{{(0)}})$" for w in w_list]
@@ -139,9 +136,9 @@ def dist_w_exp(RUN = True):
         plot_graph(results, plot_file, 'w', r"$w$", rf"$\mathcal{{W}}_{{2, w}}$")
     else:
         results = read_result(result_file)
-        plot_graph(results, plot_file, 'w', r"$w$", rf"$\mathcal{{W}}_{{2, {w}}}$")
+        plot_graph(results, plot_file, 'w', r"$w$", rf"$\mathcal{{W}}_{{2, w}}$")
 
 def main():
-    dist_w_exp()
+    dist_w_exp(RUN = False)
 
 main()
