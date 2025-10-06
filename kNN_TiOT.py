@@ -81,15 +81,16 @@ def plot_results(results, plot_file):
     alg_names = [k for k in results.keys() if k != 'eps']
     sns.set(style="whitegrid", context="paper")
     plt.figure(figsize=(8, 5))
+    plt.grid(False)
     markers = ['o', '^', 'D',  'v', 'P', 'X']
     linestyles = ['-', '-', "-", '-', '-']
     i = 0
     for name in alg_names:
-        plt.plot(eps_list, np.array(results[name]), label = name, linewidth=1.75, marker=markers[i], linestyle = linestyles[i], markersize = 7)
+        plt.plot(eps_list, np.array(results[name]), label = name, linewidth=1.75, marker=markers[i], linestyle = linestyles[i], markersize = 9)
         i+=1
-    plt.tick_params(axis="both", which="major", labelsize=20)
-    plt.xlabel(r"$\varepsilon$", fontsize = 20)
-    plt.ylabel("Error", fontsize = 20)
+    plt.tick_params(axis="both", which="major", labelsize=21, bottom=True, left=True)
+    plt.xlabel(r"$\varepsilon$", fontsize = 21)
+    plt.ylabel("Error", fontsize = 21)
     #plt.legend()
     plt.tight_layout()
     plt.savefig(plot_file, dpi=300)  # High-resolution
