@@ -157,7 +157,7 @@ def read_result(result_file):
     
 RANDOM_STATE = None
 NumFold = 3
-def experiment_kNN(dataset_name, w_TAOT, RUN = True, random = 26):
+def experiment_kNN(dataset_name, w_TAOT, RUN = True, random = 57): # So far, best is random = 54, 55, 26
     global RANDOM_STATE
     RANDOM_STATE = random
     eps_list = [0.01*i for i in range(1,11)]
@@ -179,25 +179,25 @@ def experiment_kNN(dataset_name, w_TAOT, RUN = True, random = 26):
  
 if __name__ == "__main__":
     # ===> Tier 1 
-    # for state in [40,41,43,44,45,46,47,48,49,50]:
+    # for state in [56,57,58,59]:
     #     experiment_kNN('Ham', 0.7, random = state)
     
-    # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
-    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
-    # experiment_kNN('MiddlePhalanxTW', 0.4)
-    # experiment_kNN('ProximalPhalanxOutlineAgeGroup', 0.1)
-    # experiment_kNN('DistalPhalanxTW', 0.5)
-    # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
-    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
-    # experiment_kNN("ProximalPhalanxTW", 0.7)
-    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
-    # experiment_kNN("SonyAIBORobotSurface1", 2)
-    # experiment_kNN("CBF", 1)
-    # experiment_kNN('SwedishLeaf',0.9) 
-    # experiment_kNN('Adiac',0.1) 
-    # experiment_kNN('ArrowHead', 3)
-    experiment_kNN('BirdChicken', 0.1)
+    experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
+    experiment_kNN('DistalPhalanxTW', 0.5)
+    experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
+    experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
+    experiment_kNN('MiddlePhalanxTW', 0.4)
+    experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
+    experiment_kNN("ProximalPhalanxTW", 0.7)
+    experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
+    experiment_kNN('ProximalPhalanxOutlineAgeGroup', 0.1)
+    experiment_kNN("SonyAIBORobotSurface1", 2)
 
+    # experiment_kNN("CBF", 1)
+    # experiment_kNN('BirdChicken', 0.1)
+    # experiment_kNN('SwedishLeaf',0.9) 
+    # experiment_kNN('ArrowHead', 3)
+    # experiment_kNN('Adiac',0.1) 
 
 
     # ==> New data
@@ -217,7 +217,6 @@ if __name__ == "__main__":
     # experiment_kNN('Trace', 0.3)
     
 
-    # experiment_kNN('ProximalPhalanxOutlineAgeGroup', 0.1)
     # experiment_kNN("ECG200", 3)
     # experiment_kNN('ECGFiveDays', 5)
     # experiment_kNN('TwoLeadECG', 0.1)
