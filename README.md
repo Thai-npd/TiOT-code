@@ -1,4 +1,4 @@
-# Time-Integrated Optimal Transport — Experimental Code
+# Time-integrated Optimal Transport — Experimental Code
 
 This repository provides the experimental code and data used in the paper “Time-integrated Optimal Transport: A Robust Minimax Framework.” 
 It includes all scripts necessary to reproduce the results and figures presented in the experimental section.
