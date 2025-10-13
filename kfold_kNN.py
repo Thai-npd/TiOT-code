@@ -27,23 +27,18 @@ def eTAOT(X1, X2):
 def oriTAOT(X1, X2):
     return TiOT_lib.eTAOT(X1,X2, w = w_global, eps = eps_global, costmatrix=TiOT_lib.costmatrix0)[0]
 
-def process_data(dataset_name ):
+def process_data(dataset_name):
     train_file = os.path.join("time_series_kNN", dataset_name, dataset_name + "_TRAIN.txt" )
     test_file = os.path.join("time_series_kNN", dataset_name, dataset_name + "_TEST.txt")
 
     with open(train_file, "r") as file:
         data = np.array([line.strip().split() for line in file], dtype=float)
 
-    # # Convert to numerical values if needed
-    # data = [[float(value) for value in row] for row in data]
-
-    Y_train = data[:, 0]      # first column
-    X_train = data[:, 1:]     # all columns except the first
-
+    Y_train = data[:, 0]    
+    X_train = data[:, 1:]
 
     with open(test_file, "r") as file:
         data_test = np.array([line.strip().split() for line in file], dtype=float)
-
 
     Y_test = data_test[:, 0]
     X_test = data_test[:, 1:] 

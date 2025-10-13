@@ -1,7 +1,5 @@
 import numpy as np
-import ot
 import pandas as pd
-from collections import defaultdict
 import seaborn as sns
 import matplotlib.pyplot as plt
 import TiOT_lib
@@ -10,16 +8,14 @@ from sklearn.neighbors import KNeighborsClassifier
 import multiprocessing
 from sklearn.metrics import accuracy_score
 from tqdm import tqdm
-import csv
-import time
+
 
 
 eps_global = 0.01
 w_global = 10
-freq_global = 20
-eta_global = 0.01
+
 def eTiOT(X1, X2):
-    return TiOT_lib.eTiOT(X1,X2, eps=eps_global, freq=freq_global, eta=eta_global)[0]
+    return TiOT_lib.eTiOT(X1,X2, eps=eps_global)[0]
 
 def eTAOT(X1, X2):
     return TiOT_lib.eTAOT(X1,X2, w = w_global, eps = eps_global)[0]
@@ -27,54 +23,23 @@ def eTAOT(X1, X2):
 def oriTAOT(X1, X2):
     return TiOT_lib.eTAOT(X1,X2, w = w_global, eps = eps_global, costmatrix=TiOT_lib.costmatrix0)[0]
 
-def process_data(dataset_name ):
+def process_data(dataset_name):
     train_file = os.path.join("time_series_kNN", dataset_name, dataset_name + "_TRAIN.txt" )
     test_file = os.path.join("time_series_kNN", dataset_name, dataset_name + "_TEST.txt")
 
     with open(train_file, "r") as file:
-        data = [line.strip().split() for line in file]
+        data = np.array([line.strip().split() for line in file], dtype=float)
 
-    # Convert to numerical values if needed
-    data = [[float(value) for value in row] for row in data]
-
-    Y_train = [row[0] for row in data]
-    X_train = [row[1:] for row in data]
+    Y_train = data[:, 0]    
+    X_train = data[:, 1:]
 
     with open(test_file, "r") as file:
-        data_test = [line.strip().split() for line in file]
+        data_test = np.array([line.strip().split() for line in file], dtype=float)
 
-    # Convert to numerical values if needed
-    data_test = [[float(value) for value in row] for row in data_test]
-
-    Y_test = [row[0] for row in data_test]
-    X_test = [row[1:] for row in data_test]
+    Y_test = data_test[:, 0]
+    X_test = data_test[:, 1:] 
 
     return [X_train, Y_train, X_test, Y_test]
-
-def kNN(dataset_name, data, metric_name , eps , w, eta = None ):
-    global w_global, eps_global, eta_global
-    w_global = w
-    eps_global = eps
-    eta_global = eta
-    if metric_name == "oriTAOT":
-        metric = oriTAOT
-    elif metric_name == "eTiOT":
-        metric = eTiOT
-    elif metric_name == 'euclidean':
-        metric = 'euclidean'
-    elif metric_name == 'eTAOT':
-        metric = eTAOT
-
-    X_train, Y_train, X_test, Y_test = data[0], data[1], data[2], data[3]
-    knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
-    knn.fit(X_train, Y_train)
-    with multiprocessing.Pool(20) as pool:
-        y_pred = list(tqdm(pool.imap(knn.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
-    pool.close()
-    accuracy = accuracy_score(Y_test, y_pred)
-    error = 1 - accuracy
-    print(f"  ====>  Completed dataset: {dataset_name}, Metric : {metric_name}, Error:",error)
-    return error
 
 def plot_results(results, plot_file):
     eps_list = results['eps']
@@ -91,11 +56,9 @@ def plot_results(results, plot_file):
     plt.tick_params(axis="both", which="major", labelsize=21, bottom=True, left=True)
     plt.xlabel(r"$\varepsilon$", fontsize = 21)
     plt.ylabel("Error", fontsize = 21)
-    #plt.legend()
     plt.tight_layout()
-    plt.savefig(plot_file, dpi=300)  # High-resolution
+    plt.savefig(plot_file, dpi=300)  
     plt.show()
-
 
 def save_result(results, result_file):
     df = pd.DataFrame(results)
@@ -106,12 +69,36 @@ def read_result(result_file):
     results = df.to_dict(orient='list')
     return results
 
-def experiment_kNN(dataset_name, w_TAOT, eta = None , RUN = True):
-    eps_list = [0.01*i for i in range(1,11)]
+def kNN(dataset_name, data, metric_name , eps , w, eta = None ):
+    global w_global, eps_global
+    w_global = w
+    eps_global = eps
+    if metric_name == "oriTAOT":
+        metric = oriTAOT
+    elif metric_name == "eTiOT":
+        metric = eTiOT
+    elif metric_name == 'euclidean':
+        metric = 'euclidean'
+    elif metric_name == 'eTAOT':
+        metric = eTAOT
 
+    X_train, Y_train, X_test, Y_test = data[0], data[1], data[2], data[3]
+    knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
+    knn.fit(X_train, Y_train)
+    with multiprocessing.Pool(4) as pool:
+        y_pred = list(tqdm(pool.imap(knn.predict, [[x_test] for x_test in X_test]), total=len(X_test)))
+    pool.close()
+    accuracy = accuracy_score(Y_test, y_pred)
+    error = 1 - accuracy
+    print(f"  ====>  Completed dataset: {dataset_name}, Metric : {metric_name}, Error:",error)
+    return error
+
+def experiment_kNN(dataset_name, w_TAOT, RUN = False):
+    eps_list = [0.01*i for i in range(1,11)]
     eps_name = f" ({eps_list[0]} to {eps_list[-1]})"       
     plot_file = os.path.join("kNN_data","plots", "Comparison on " + dataset_name + eps_name + ".pdf")
-    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name + f'_freq{freq_global}_'  + f"_eta_adap" + '.csv')
+    result_file = os.path.join("kNN_data", "saved_results","Results on " + dataset_name + eps_name  + '.csv')
+
     if RUN :
         data = process_data(dataset_name = dataset_name)
         w_list = [ round(w_TAOT/5, 3), w_TAOT,w_TAOT*5]
@@ -119,7 +106,7 @@ def experiment_kNN(dataset_name, w_TAOT, eta = None , RUN = True):
         alg_names = ["eTiOT"]   +  [fr"eTAOT$(\omega = {w})$" for w in w_list_name]
         results = {**{'eps': eps_list}, **{name: [] for name in alg_names}}
         for eps in eps_list:
-            results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = None, eta=eta))
+            results['eTiOT'].append(kNN(dataset_name, data, metric_name='eTiOT', eps = eps, w = None))
             for i in range(len(w_list)):
                 results[fr"eTAOT$(\omega = {w_list_name[i]})$"].append(kNN(dataset_name, data, metric_name='oriTAOT', eps = eps, w = w_list[i]))
 
@@ -130,65 +117,21 @@ def experiment_kNN(dataset_name, w_TAOT, eta = None , RUN = True):
         plot_results(results, plot_file)
  
 if __name__ == "__main__":
-    # ===> Tier 1 
 
     # experiment_kNN('Adiac',0.1) 
     # experiment_kNN('ArrowHead', 3)
     # experiment_kNN("CBF", 1)
-    # experiment_kNN('BirdChicken', 0.1)
+    experiment_kNN('BirdChicken', 0.1)
     # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
     # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
     # experiment_kNN('DistalPhalanxTW', 0.5 )
     # experiment_kNN('Ham', 0.7)
+    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2, 0.1)
     # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
     # experiment_kNN('MiddlePhalanxTW', 0.4)
-    # experiment_kNN('ProximalPhalanxOutlineAgeGroup', 0.1)
     # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_kNN("ProximalPhalanxTW", 0.7)
     # experiment_kNN("SonyAIBORobotSurface1", 2)
     # experiment_kNN('SwedishLeaf',0.9) 
 
 
-    experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2, 0.1)
-    # ==> New data
-    # experiment_kNN('DistalPhalanxTW', 0.5 )
-    # experiment_kNN("SonyAIBORobotSurface2", 10)
-    # experiment_kNN('Coffee', 2 )
-    # experiment_kNN('Plane', 0.5)
-    # experiment_kNN('BeetleFly', 0.3)
-    # experiment_kNN('Herring', 0.2)
-
-
-
-    # experiment_kNN('FiftyWords',2) 
-    # experiment_kNN('Car', 0.8)
-    # experiment_kNN('MoteStrain', 1)
-    # experiment_kNN('Trace', 0.3)
-    
-
-    # experiment_kNN("ECG200", 3)
-    # experiment_kNN('ECGFiveDays', 5)
-    # experiment_kNN('TwoLeadECG', 0.1)
-    # experiment_kNN('SyntheticControl', 4)
-    # experiment_kNN('Chinatown', 1)
-    # experiment_kNN('ItalyPowerDemand', 7)
-    # experiment_kNN('ToeSegmentation2', 0.8)
-    # experiment_kNN('DistalPhalanxTW', 0.5)
-
-
-    # experiment_kNN('Earthquakes', 7)
-    # experiment_kNN('FacesUCR',3) # Bad results and overflow
-    # experiment_kNN('Wafer',8) 
-    # experiment_kNN('FaceFour',5) 
-   
-    
-    # experiment_kNN('ToeSegmentation1', 0.1)
-    # experiment_kNN('DiatomSizeReduction', 0.2)
-    # experiment_kNN('Meat', 0.9)
-    # experiment_kNN('MedicalImages', 4)
-    # experiment_kNN('Lightning7', 0.9)
-    # experiment_kNN('ShapeletSim', 2)
-    # experiment_kNN('Wine', 9)
-    # experiment_kNN('Beef', 6)
-    # experiment_kNN('Symbols', 0.8)
-    # experiment_kNN('Strawberry', 0.2)
