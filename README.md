@@ -1,14 +1,14 @@
-Time-Integrated Optimal Transport — Experimental Code
+# Time-Integrated Optimal Transport — Experimental Code
 
 This repository provides the experimental code and data used in the paper “Time-Integrated Optimal Transport: A Robust Minimax Approach.” 
 It includes all scripts necessary to reproduce the results and figures presented in the experimental section.
 
-Datasets:
+### Datasets:
  - Data for experiments in Sections 4.1 and 4.3 is synthetically generated.
  - Data supporting Section 4.2 is provided in the file DailyDelhiClimateTrain.csv.
  - Data for Section 4.4 is stored in the folder time_series_kNN.
 
-Code Structure:
+### Code Structure:
 The main solver for the TiOT and eTiOT problems, along with related components, is implemented in TiOT_lib.py.
 The repository also includes five experiment scripts corresponding to the paper’s sections:
  - alignment_Exp.py – Experiment for Section 4.1 (Figure 1)
@@ -17,7 +17,7 @@ The repository also includes five experiment scripts corresponding to the paper�
     - run the function 'dist_w_exp()' to reproduce Figure 2 (right)
  - runtime_Exp.py – Experiment for Section 4.3
     - run the function 'deviation_experiment()' to reproduce Figure 3 (left)
-    - run the function 'runtime_experiment()' to reproduce Figure 3 (right0
+    - run the function 'runtime_experiment()' to reproduce Figure 3 (right)
  - kfold_kNN_Exp.py – Generates Table 1 (Section 4.4)
  - robust_kNN_Exp.py – Generates Figure 4 (Section 4.4) and Figure 5 (Appendix D)
 
