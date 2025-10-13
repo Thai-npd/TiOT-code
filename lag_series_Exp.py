@@ -135,7 +135,5 @@ def dist_w_exp(RUN = True):
         results = read_result(result_file)
         plot_graph(results, plot_file, 'w', r"$w$", rf"$\mathcal{{W}}_{{2, w}}$")
 
-def main():
-    dist_lag_exp()
 
-main()
+dist_lag_exp()

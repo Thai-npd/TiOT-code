@@ -32,7 +32,6 @@ def read_result(result_file):
     results = df.to_dict(orient='list')
     return results
 
-
 def generate_two_gaussian(n, noise=0.01):
     rng = np.random.default_rng(6)
     t = np.arange(n)
@@ -185,7 +184,4 @@ def deviation_experiment(RUN = True):
     plt.show()
 
 
-def main():
-    deviation_experiment()
-
-main()
+deviation_experiment()
