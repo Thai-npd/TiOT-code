@@ -19,8 +19,8 @@ from tqdm import tqdm
 
 # Number of worker processes. The cross-validation phase has (metrics x seeds x eps)
 # independent heavy tasks, so this scales well up to that count.
-N_WORKERS = max(1, multiprocessing.cpu_count() - 1)
-
+# N_WORKERS = max(1, multiprocessing.cpu_count() - 1)
+N_WORKERS = 32
 
 # ---------------------------------------------------------------------------
 # Metrics.
@@ -259,9 +259,9 @@ def experiment_kNN(dataset_name, w_TAOT, seeds=range(1, 6)):
 
 
 if __name__ == "__main__":
-    # experiment_kNN('Adiac', 0.1)
-    # experiment_kNN('ArrowHead', 3)
-    # experiment_kNN("CBF", 1)
+    experiment_kNN('Adiac', 0.1)
+    experiment_kNN('ArrowHead', 3)
+    experiment_kNN("CBF", 1)
     # experiment_kNN('BirdChicken', 0.1)
     # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
     # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
@@ -272,5 +272,5 @@ if __name__ == "__main__":
     # experiment_kNN('MiddlePhalanxTW', 0.4)
     # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_kNN("ProximalPhalanxTW", 0.7)
-    experiment_kNN("SonyAIBORobotSurface1", 2)
+    # experiment_kNN("SonyAIBORobotSurface1", 2)
     # experiment_kNN('SwedishLeaf',0.9)
