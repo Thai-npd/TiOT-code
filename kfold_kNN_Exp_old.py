@@ -19,8 +19,8 @@ from tqdm import tqdm
 
 # Number of worker processes. The cross-validation phase has (metrics x seeds x eps)
 # independent heavy tasks, so this scales well up to that count.
-# N_WORKERS = max(1, multiprocessing.cpu_count() - 1)
-N_WORKERS = 32
+N_WORKERS = max(1, multiprocessing.cpu_count() - 1)
+
 
 # ---------------------------------------------------------------------------
 # Metrics.
@@ -84,31 +84,13 @@ def confidence_interval(values, confidence=0.95):
 
 
 def cross_val_error(metric, X, y, seed, cv=3):
-    """Mean 1-NN cross-validation error, computing distances live from a callable metric.
-    Kept as the reference definition (used by tests); the experiment uses the precomputed
-    variant below."""
+    """Mean 1-NN cross-validation error for a fully-specified metric (eps/w already bound)."""
     kf = KFold(n_splits=cv, shuffle=True, random_state=seed)
     scores = []
     for train_idx, test_idx in kf.split(X):
         knn = KNeighborsClassifier(n_neighbors=1, metric=metric)
         knn.fit(X[train_idx], y[train_idx])
         y_pred = knn.predict(X[test_idx])
-        scores.append(accuracy_score(y[test_idx], y_pred))
-    return 1 - float(np.mean(scores))
-
-
-def cross_val_error_precomputed(M, y, seed, cv=3):
-    """Identical 1-NN cross-validation to cross_val_error, but distances are read from a
-    precomputed N x N matrix (M[i, j] = distance(point_i, point_j)) instead of recomputed.
-
-    KFold.split only uses the sample count, so for the same seed the fold partition is the
-    same as the live version -> the CV error is bit-identical, only far cheaper."""
-    kf = KFold(n_splits=cv, shuffle=True, random_state=seed)
-    scores = []
-    for train_idx, test_idx in kf.split(M):
-        knn = KNeighborsClassifier(n_neighbors=1, metric='precomputed')
-        knn.fit(M[np.ix_(train_idx, train_idx)], y[train_idx])
-        y_pred = knn.predict(M[np.ix_(test_idx, train_idx)])
         scores.append(accuracy_score(y[test_idx], y_pred))
     return 1 - float(np.mean(scores))
 
@@ -123,21 +105,12 @@ def _init_worker(data):
     global _DATA
     _DATA = data
 
-def _row_task(task):
-    """Compute one row of the train pairwise distance matrix for a given (metric, eps):
-    row[j] = metric(X[i], X[j]) for every j. The diagonal (j == i) is left at 0 -- it is
-    never read by kNN, since a point is never in the training set of the fold that holds
-    it out."""
-    metric_name, eps, w, i = task
-    X = _DATA[0]
+def _cv_task(task):
+    """One full k-fold cross-validation for a (metric, eps, w, seed) combination."""
+    metric_name, eps, w, seed = task
+    X_train, Y_train = _DATA[0], _DATA[1]
     metric = build_metric(metric_name, eps, w)
-    xi = X[i]
-    n = len(X)
-    row = np.zeros(n)
-    for j in range(n):
-        if j != i:
-            row[j] = metric(xi, X[j])
-    return row
+    return cross_val_error(metric, X_train, Y_train, seed=seed)
 
 def _test_task(task):
     """1-NN prediction for a single test sample at a fixed (metric, eps, w)."""
@@ -206,8 +179,7 @@ def experiment_kNN(dataset_name, w_TAOT, seeds=range(1, 6)):
     os.makedirs(os.path.dirname(result_file), exist_ok=True)
 
     data = process_data(dataset_name=dataset_name)
-    Y_train, Y_test = data[1], data[3]
-    n_train = len(Y_train)
+    Y_test = data[3]
     n_test = len(Y_test)
 
     metrics = [
@@ -215,37 +187,28 @@ def experiment_kNN(dataset_name, w_TAOT, seeds=range(1, 6)):
         {'key': 'eTAOT', 'label': f'eTAOT (w={w_TAOT})',  'metric_name': 'oriTAOT', 'w': w_TAOT},
     ]
 
-    # For the CV phase the train<->train distances are the same across all seeds (seeds
-    # only reshuffle the fold split), so they are precomputed ONCE per (metric, eps) and
-    # then reused. Work-list = one task per matrix ROW, which parallelises evenly and lets
-    # the progress bar advance per-row instead of per-whole-CV.
-    row_tasks = [(m['metric_name'], eps, m['w'], i)
-                 for m in metrics for eps in eps_list for i in range(n_train)]
+    # Build the whole cross-validation work-list up front: one task per
+    # (metric, seed, eps). These are independent and heavy -> ideal for one pool.
+    cv_tasks = [(m['metric_name'], eps, m['w'], seed)
+                for m in metrics for seed in seeds for eps in eps_list]
 
     with multiprocessing.Pool(N_WORKERS, initializer=_init_worker, initargs=(data,)) as pool:
-        # ---- Phase 1a: precompute the train pairwise distance matrices ----
-        rows = list(tqdm(pool.imap(_row_task, row_tasks),
-                         total=len(row_tasks), desc="cv dist matrix"))
+        # ---- Phase 1: cross-validation ----
+        cv_errors = list(tqdm(pool.imap(_cv_task, cv_tasks),
+                              total=len(cv_tasks), desc="cross-val"))
 
-        matrices = {(m['metric_name'], eps): np.zeros((n_train, n_train))
-                    for m in metrics for eps in eps_list}
-        for (metric_name, eps, w, i), row in zip(row_tasks, rows):
-            matrices[(metric_name, eps)][i] = row
-
-        # ---- Phase 1b: cross-validation = pure lookups into the matrices (cheap, so it
-        # runs in the main process while the pool is idle). Produces the same numbers as
-        # the previous live computation, just without recomputing distances per seed.
+        # Reshape flat results back into val_errors[key][seed] = [error per eps].
         val_errors = {m['key']: {s: [] for s in seeds} for m in metrics}
+        idx = 0
         for m in metrics:
             for s in seeds:
-                for eps in eps_list:
-                    M = matrices[(m['metric_name'], eps)]
-                    val_errors[m['key']][s].append(
-                        cross_val_error_precomputed(M, Y_train, seed=s))
+                for _ in eps_list:
+                    val_errors[m['key']][s].append(cv_errors[idx])
+                    idx += 1
 
-        # ---- Phase 1c: two tie-break candidates per (metric, seed): the smallest and the
-        # largest eps achieving the minimum validation error. Both are evaluated on the test
-        # set so the winning rule can be decided later; they coincide when there is no tie.
+        # Two tie-break candidates per (metric, seed): the smallest and the largest eps
+        # achieving the minimum validation error. Both are evaluated on the test set so
+        # the winning rule can be decided later; they coincide when there is no tie.
         eps_small, eps_large = {}, {}
         for m in metrics:
             for s in seeds:
@@ -296,9 +259,9 @@ def experiment_kNN(dataset_name, w_TAOT, seeds=range(1, 6)):
 
 
 if __name__ == "__main__":
-    experiment_kNN('Adiac', 0.1)
-    experiment_kNN('ArrowHead', 3)
-    experiment_kNN("CBF", 1)
+    # experiment_kNN('Adiac', 0.1)
+    # experiment_kNN('ArrowHead', 3)
+    # experiment_kNN("CBF", 1)
     # experiment_kNN('BirdChicken', 0.1)
     # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
     # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
@@ -309,5 +272,5 @@ if __name__ == "__main__":
     # experiment_kNN('MiddlePhalanxTW', 0.4)
     # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
     # experiment_kNN("ProximalPhalanxTW", 0.7)
-    # experiment_kNN("SonyAIBORobotSurface1", 2)
+    experiment_kNN("SonyAIBORobotSurface1", 2)
     # experiment_kNN('SwedishLeaf',0.9)
