@@ -19,8 +19,8 @@ from tqdm import tqdm
 
 # Number of worker processes. The cross-validation phase has (metrics x seeds x eps)
 # independent heavy tasks, so this scales well up to that count.
-N_WORKERS = max(1, multiprocessing.cpu_count() - 1)
-
+# N_WORKERS = max(1, multiprocessing.cpu_count() - 1)
+N_WORKERS = 32
 
 # ---------------------------------------------------------------------------
 # Metrics.
@@ -221,6 +221,9 @@ def experiment_kNN(dataset_name, w_TAOT, seeds=range(1, 6)):
     # the progress bar advance per-row instead of per-whole-CV.
     row_tasks = [(m['metric_name'], eps, m['w'], i)
                  for m in metrics for eps in eps_list for i in range(n_train)]
+
+    print(f"Start cv with {len(metrics)} metrics, {len(eps_list)} eps, {n_train} data points "
+          f"-> {len(row_tasks)} distance-matrix rows ({N_WORKERS} workers)")
 
     with multiprocessing.Pool(N_WORKERS, initializer=_init_worker, initargs=(data,)) as pool:
         # ---- Phase 1a: precompute the train pairwise distance matrices ----
