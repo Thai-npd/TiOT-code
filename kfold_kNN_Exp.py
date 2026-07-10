@@ -20,6 +20,10 @@ from tqdm import tqdm
 # Number of worker processes. The cross-validation phase has (metrics x seeds x eps)
 # independent heavy tasks, so this scales well up to that count.
 # N_WORKERS = max(1, multiprocessing.cpu_count() - 1)
+
+# Sentinel distance for a failed (non-finite) OT solve. Larger than any real distance, so
+# such a pair is never selected as a nearest neighbour.
+DIST_INF = 1e12
 N_WORKERS = 32
 
 # ---------------------------------------------------------------------------
@@ -234,6 +238,21 @@ def experiment_kNN(dataset_name, w_TAOT, seeds=range(1, 6)):
                     for m in metrics for eps in eps_list}
         for (metric_name, eps, w, i), row in zip(row_tasks, rows):
             matrices[(metric_name, eps)][i] = row
+
+        # eTiOT/eTAOT can diverge to NaN/inf at very small eps for some series pairs
+        # (entropic-OT underflow: exp(-C/eps) overflows). A non-finite value means the
+        # solve FAILED, not that the pair is close -> replace it with a large sentinel so it
+        # is never chosen as a nearest neighbour, and report it. (The old live-metric path
+        # let these NaNs pass into the neighbour search silently; the precomputed matrix
+        # makes them explicit, which is why Ham crashed here rather than before.)
+        for (metric_name, eps), M in matrices.items():
+            bad = ~np.isfinite(M)
+            n_bad = int(bad.sum())
+            if n_bad:
+                print(f"WARNING: {metric_name} eps={eps}: {n_bad} non-finite distances of "
+                      f"{n_train * (n_train - 1)} pairs -> treated as +inf (never a neighbour); "
+                      f"eTiOT numerical breakdown at this eps.")
+                M[bad] = DIST_INF
 
         # ---- Phase 1b: cross-validation = pure lookups into the matrices (cheap, so it
         # runs in the main process while the pool is idle). Produces the same numbers as
