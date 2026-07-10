@@ -223,25 +223,38 @@ def eTiOT(x, y, a = None, b = None, eps = 0.01, maxIter = 5000, tolerance = 0.00
     nC = w * spat_temp_diff - temporal_cost
     K = np.exp(nC)
     curIter = 0
+    diverged = False
     while curIter < maxIter:
         g = a/ (K @ h)
         h = b/(K.T @ g)
+        # Stop as soon as an iterate becomes NaN. At small eps, K = exp(-C/eps) underflows
+        # to 0, so g = a/(K@h) blows up to inf and the next 0*inf produces NaN. Once any
+        # entry is NaN the BCD is an absorbing NaN state -- no operation in the loop can
+        # bring it back to finite (proj(NaN)=NaN, exp(NaN)=NaN) -- so continuing to maxIter
+        # only wastes time. Bail out and flag the solve as failed (distance = inf). This
+        # check is a no-op for finite runs, so converging pairs are unaffected.
+        if np.any(np.isnan(g)) or np.any(np.isnan(h)):
+            diverged = True
+            if verbose >= 1:
+                warnings.warn(f"eTiOT diverged (NaN iterate) at iteration {curIter}: "
+                              f"eps={eps} is too small for this pair; returning inf.")
+            break
         if curIter % freq ==0 :
             w, K = PGD(g,h, w, subprob_tol= subprob_tol, maxIter=submax_iter, eta=eta, init_stepsize=init_stepsize)
-        if verbose >= 2 and (np.any(np.isnan(g)) or np.any(np.isnan(h))):
-            warnings.warn(f"Warning: numerical errors at iteration {curIter}: consider larger epsilon or smaller stepsize(current eta = {eta})")
-            break
-        if curIter % freq == 0 and np.sum(np.abs(g * (K @ h) - a)) < tolerance: 
+        if curIter % freq == 0 and np.sum(np.abs(g * (K @ h) - a)) < tolerance:
             if verbose >= 1:
                 print(f"TiOT-BCD Algorithm converges after {curIter+1} iterations ")
             break
         curIter += 1
     if curIter == maxIter and verbose >= 1: print(f"TiOT algorithm did not stop after {maxIter} iterations")
-    C = eps * (temporal_cost - w*spat_temp_diff)
-    K *= h.reshape((1, -1)) 
-    K *= g.reshape((-1,1))
-    #transport_plan = g.reshape((-1, 1)) * K * h.reshape((1, -1)) 
-    distance = np.einsum("ij,ij->", C, K)
+    if diverged:
+        distance = np.inf
+    else:
+        C = eps * (temporal_cost - w*spat_temp_diff)
+        K *= h.reshape((1, -1))
+        K *= g.reshape((-1,1))
+        #transport_plan = g.reshape((-1, 1)) * K * h.reshape((1, -1))
+        distance = np.einsum("ij,ij->", C, K)
     end = time.perf_counter()
     if timing == True:
         return distance, K, w, end - start
