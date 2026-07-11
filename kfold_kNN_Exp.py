@@ -325,11 +325,34 @@ if __name__ == "__main__":
     # experiment_kNN("DistalPhalanxOutlineAgeGroup", 1)
     # experiment_kNN('DistalPhalanxOutlineCorrect', 0.4)
     # experiment_kNN('DistalPhalanxTW', 0.5 )
-    experiment_kNN('Ham', 0.7)
-    experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
-    experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
-    experiment_kNN('MiddlePhalanxTW', 0.4)
-    experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
-    experiment_kNN("ProximalPhalanxTW", 0.7)
-    experiment_kNN("SonyAIBORobotSurface1", 2)
-    experiment_kNN('SwedishLeaf',0.9)
+    # experiment_kNN('Ham', 0.7)
+    # experiment_kNN('MiddlePhalanxOutlineAgeGroup', 0.2)
+    # experiment_kNN('MiddlePhalanxOutlineCorrect', 0.5)
+    # experiment_kNN('MiddlePhalanxTW', 0.4)
+    # experiment_kNN('ProximalPhalanxOutlineCorrect', 0.7)
+    # experiment_kNN("ProximalPhalanxTW", 0.7)
+    # experiment_kNN("SonyAIBORobotSurface1", 2)
+    # experiment_kNN('SwedishLeaf',0.9)
+
+    experiment_kNN('SyntheticControl',4)
+    experiment_kNN('GunPoint',0.3)
+    experiment_kNN('OSULeaf',3)
+    experiment_kNN('FiftyWords',2)
+    experiment_kNN('Trace', 0.3)
+    # experiment_kNN('TwoPatterns', 6) # delay due to its large size
+    # experiment_kNN('Wafer', 8) # delay due to its large size
+    experiment_kNN('FaceFour', 5)
+    experiment_kNN('Lightning7', 0.9)
+    experiment_kNN('ECG200', 3)
+    # experiment_kNN('Yoga', 0.2) # delay due to its large size
+    experiment_kNN('Plane', 0.5)
+    experiment_kNN('Car', 0.8)
+    experiment_kNN('Beef', 6)
+    experiment_kNN('Coffee', 2)
+    experiment_kNN('OliveOil', 0.6)
+    # experiment_kNN('CinCECGTorso', 10) # delay due to its large size
+
+
+
+
+
