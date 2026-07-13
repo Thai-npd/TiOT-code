@@ -1,0 +1,55 @@
+Dataset: Plane
+eps grid: [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
+Seeds: [1, 2, 3, 4, 5]
+
+===== Metric: eTiOT =====
+Validation errors (rows = eps, cols = seed):
+          seed1  seed2  seed3  seed4     seed5
+eps=0.01    0.0    0.0    0.0    0.0  0.009524
+eps=0.02    0.0    0.0    0.0    0.0  0.000000
+eps=0.03    0.0    0.0    0.0    0.0  0.000000
+eps=0.04    0.0    0.0    0.0    0.0  0.000000
+eps=0.05    0.0    0.0    0.0    0.0  0.000000
+eps=0.06    0.0    0.0    0.0    0.0  0.000000
+eps=0.07    0.0    0.0    0.0    0.0  0.000000
+eps=0.08    0.0    0.0    0.0    0.0  0.000000
+eps=0.09    0.0    0.0    0.0    0.0  0.000000
+eps=0.1     0.0    0.0    0.0    0.0  0.000000
+
+--- tie-break = smallest eps ---
+  Selected eps per seed  : seed1=0.01, seed2=0.01, seed3=0.01, seed4=0.01, seed5=0.02
+  Final test error / seed: [0.00952380952380949, 0.00952380952380949, 0.00952380952380949, 0.00952380952380949, 0.00952380952380949]
+  Mean final test error  : 0.009524
+  95% confidence interval: [0.009524, 0.009524]  (mean +/- 0.000000)
+
+--- tie-break = largest eps ---
+  Selected eps per seed  : seed1=0.1, seed2=0.1, seed3=0.1, seed4=0.1, seed5=0.1
+  Final test error / seed: [0.00952380952380949, 0.00952380952380949, 0.00952380952380949, 0.00952380952380949, 0.00952380952380949]
+  Mean final test error  : 0.009524
+  95% confidence interval: [0.009524, 0.009524]  (mean +/- 0.000000)
+
+===== Metric: eTAOT (w=0.5) =====
+Validation errors (rows = eps, cols = seed):
+          seed1     seed2  seed3  seed4  seed5
+eps=0.01    0.0  0.000000    0.0    0.0    0.0
+eps=0.02    0.0  0.000000    0.0    0.0    0.0
+eps=0.03    0.0  0.000000    0.0    0.0    0.0
+eps=0.04    0.0  0.000000    0.0    0.0    0.0
+eps=0.05    0.0  0.000000    0.0    0.0    0.0
+eps=0.06    0.0  0.000000    0.0    0.0    0.0
+eps=0.07    0.0  0.000000    0.0    0.0    0.0
+eps=0.08    0.0  0.000000    0.0    0.0    0.0
+eps=0.09    0.0  0.000000    0.0    0.0    0.0
+eps=0.1     0.0  0.009524    0.0    0.0    0.0
+
+--- tie-break = smallest eps ---
+  Selected eps per seed  : seed1=0.01, seed2=0.01, seed3=0.01, seed4=0.01, seed5=0.01
+  Final test error / seed: [0.0, 0.0, 0.0, 0.0, 0.0]
+  Mean final test error  : 0.000000
+  95% confidence interval: [0.000000, 0.000000]  (mean +/- 0.000000)
+
+--- tie-break = largest eps ---
+  Selected eps per seed  : seed1=0.1, seed2=0.09, seed3=0.1, seed4=0.1, seed5=0.1
+  Final test error / seed: [0.00952380952380949, 0.00952380952380949, 0.00952380952380949, 0.00952380952380949, 0.00952380952380949]
+  Mean final test error  : 0.009524
+  95% confidence interval: [0.009524, 0.009524]  (mean +/- 0.000000)
