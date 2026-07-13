@@ -353,11 +353,25 @@ if __name__ == "__main__":
     # # experiment_kNN('CinCECGTorso', 10) # delay due to its large size
 
 
-    experiment_kNN('SyntheticControl',4)
-    experiment_kNN('GunPoint',0.3)
-    experiment_kNN('OSULeaf',3)
-    experiment_kNN('FiftyWords',2)
-    experiment_kNN('Trace', 0.3)
+    experiment_kNN('DiatomSizeReduction', 0.2)
+    experiment_kNN('ECGFiveDays', 5)
+    experiment_kNN('FacesUCR', 3)
+    experiment_kNN('ItalyPowerDemand', 7)
+    experiment_kNN('MedicalImages', 4)
+    experiment_kNN('MoteStrain', 1)
+    experiment_kNN('SonyAIBORobotSurface2', 10)
+    experiment_kNN('Symbols', 0.8)
+    experiment_kNN('TwoLeadECG', 0.1)
+    experiment_kNN('CricketX', 3)
+    experiment_kNN('CricketY', 3)
+    experiment_kNN('CricketZ', 5)
+    experiment_kNN('BeetleFly', 0.3)
+    experiment_kNN('Herring', 0.2)
+    experiment_kNN('ToeSegmentation1', 0.1)
+    experiment_kNN('ToeSegmentation2', 0.8)
+    experiment_kNN('Earthquakes', 7)
+    experiment_kNN('ShapeletSim', 2)
+    experiment_kNN('Wine', 9)
 
 
 
