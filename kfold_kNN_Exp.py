@@ -24,7 +24,7 @@ from tqdm import tqdm
 # Sentinel distance for a failed (non-finite) OT solve. Larger than any real distance, so
 # such a pair is never selected as a nearest neighbour.
 DIST_INF = 1e12
-N_WORKERS = 32
+N_WORKERS = 8
 
 # ---------------------------------------------------------------------------
 # Metrics.
@@ -353,25 +353,37 @@ if __name__ == "__main__":
     # # experiment_kNN('CinCECGTorso', 10) # delay due to its large size
 
 
-    experiment_kNN('DiatomSizeReduction', 0.2)
-    experiment_kNN('ECGFiveDays', 5)
-    experiment_kNN('FacesUCR', 3)
-    experiment_kNN('ItalyPowerDemand', 7)
-    experiment_kNN('MedicalImages', 4)
-    experiment_kNN('MoteStrain', 1)
-    experiment_kNN('SonyAIBORobotSurface2', 10)
-    experiment_kNN('Symbols', 0.8)
-    experiment_kNN('TwoLeadECG', 0.1)
-    experiment_kNN('CricketX', 3)
-    experiment_kNN('CricketY', 3)
-    experiment_kNN('CricketZ', 5)
-    experiment_kNN('BeetleFly', 0.3)
-    experiment_kNN('Herring', 0.2)
-    experiment_kNN('ToeSegmentation1', 0.1)
-    experiment_kNN('ToeSegmentation2', 0.8)
-    experiment_kNN('Earthquakes', 7)
-    experiment_kNN('ShapeletSim', 2)
-    experiment_kNN('Wine', 9)
+    # experiment_kNN('DiatomSizeReduction', 0.2)
+    # experiment_kNN('ECGFiveDays', 5)
+    # experiment_kNN('FacesUCR', 3)
+    # experiment_kNN('ItalyPowerDemand', 7)
+    # experiment_kNN('MedicalImages', 4)
+    # experiment_kNN('MoteStrain', 1)
+    # experiment_kNN('SonyAIBORobotSurface2', 10)
+    # experiment_kNN('Symbols', 0.8)
+    # experiment_kNN('TwoLeadECG', 0.1)
+    # experiment_kNN('CricketX', 3)
+    # experiment_kNN('CricketY', 3)
+    # experiment_kNN('CricketZ', 5)
+    # experiment_kNN('BeetleFly', 0.3)
+    # experiment_kNN('Herring', 0.2)
+    # experiment_kNN('ToeSegmentation1', 0.1)
+    # experiment_kNN('ToeSegmentation2', 0.8)
+    # experiment_kNN('Earthquakes', 7)
+    # experiment_kNN('ShapeletSim', 2)
+    # experiment_kNN('Wine', 9)
+
+    # w taken from the TAOT column "(lambda and w)" of the reference table
+    experiment_kNN('Meat', 0.9)
+    experiment_kNN('Strawberry', 0.2)
+    experiment_kNN('WordSynonyms', 3)
+    experiment_kNN('Computers', 0.6)
+    experiment_kNN('Worms', 1)
+    experiment_kNN('WormsTwoClass', 8)
+    experiment_kNN('RefrigerationDevices', 0.2)
+    experiment_kNN('ScreenType', 0.2)
+    experiment_kNN('SmallKitchenAppliances', 4)
+    experiment_kNN('ShapesAll', 0.8)
 
 
 
